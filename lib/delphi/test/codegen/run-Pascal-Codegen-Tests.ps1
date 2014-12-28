@@ -183,7 +183,7 @@ function TestIdlFile([string] $idl) {
 #---- main -------------------------------------------------
 # CONFIGURATION BEGIN
 # configuration settings, adjust as necessary to meet your system setup
-$MY_THRIFT_FILES = ""
+$MY_THRIFT_FILES = "..\..\..\..\..\..\other_thrift_files"
 $VERBOSE = ""  # set any Thrift compiler debug/verbose flag you want
 
 # init
