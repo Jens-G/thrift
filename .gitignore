@@ -158,6 +158,8 @@ project.lock.json
 /lib/cpp/x64/Debug-mt/
 /lib/cpp/x64/Release
 /lib/cpp/x64/Release-mt
+/lib/csharp/src/bin
+/lib/csharp/src/obj
 /lib/c_glib/*.gcda
 /lib/c_glib/*.gcno
 /lib/c_glib/*.loT
@@ -345,6 +347,8 @@ project.lock.json
 /test/cpp/StressTestNonBlocking
 /test/cpp/TestClient
 /test/cpp/TestServer
+/test/csharp/bin
+/test/csharp/obj
 /test/dart/**/.dart_tool
 /test/dart/**/.packages
 /test/dart/**/packages
