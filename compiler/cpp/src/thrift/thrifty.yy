@@ -203,6 +203,9 @@ const int struct_is_union = 1;
 %type<tstruct>   FieldList
 %type<tbool>     FieldReference
 
+%type<id>        TemplateDeclType
+%type<ttype>     TemplateImplType
+
 %type<tenum>     Enum
 %type<tenum>     EnumDefList
 %type<tenumv>    EnumDef
@@ -489,7 +492,7 @@ EnumDef:
       if ($1 != nullptr) {
         $$->set_doc($1);
       }
-	  if ($3 != nullptr) {
+      if ($3 != nullptr) {
         $$->annotations_ = $3->annotations_;
         delete $3;
       }
@@ -632,18 +635,39 @@ StructHead:
     }
 
 Struct:
-  StructHead tok_identifier XsdAll '{' FieldList '}' TypeAnnotations
+  StructHead tok_identifier TemplateDeclType XsdAll '{' FieldList '}' TypeAnnotations
     {
       pdebug("Struct -> tok_struct tok_identifier { FieldList }");
       validate_simple_identifier( $2);
-      $5->set_xsd_all($3);
-      $5->set_union($1 == struct_is_union);
-      $$ = $5;
+      $6->set_template_type($3);
+      $6->set_xsd_all($4);
+      $6->set_union($1 == struct_is_union);
+      $$ = $6;
       $$->set_name($2);
-      if ($7 != nullptr) {
-        $$->annotations_ = $7->annotations_;
-        delete $7;
+      if ($8 != nullptr) {
+        $$->annotations_ = $8->annotations_;
+        delete $8;
       }
+    }
+
+TemplateDeclType:
+  '<' tok_identifier '>'
+    {
+      $$ = $2;
+    }
+|
+    {
+      $$ = nullptr;
+    }
+
+TemplateImplType:
+  '<' FieldType '>'
+    {
+      $$ = $2;
+    }
+|
+    {
+      $$ = nullptr;
     }
 
 XsdAll:
@@ -1123,7 +1147,7 @@ FunctionType:
     }
 
 FieldType:
-  tok_identifier
+  tok_identifier TemplateImplType
     {
       pdebug("FieldType -> tok_identifier");
       if (g_parse_mode == INCLUDES) {
@@ -1140,6 +1164,7 @@ FieldType:
            */
           $$ = new t_typedef(g_program, $1, true);
         }
+        $$->instantiate_template_type($2);
       }
     }
 | BaseType

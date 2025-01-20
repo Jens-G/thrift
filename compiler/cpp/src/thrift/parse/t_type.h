@@ -88,6 +88,9 @@ public:
 
   std::map<std::string, std::vector<std::string>> annotations_;
 
+  void instantiate_template_type(t_type* tmpl_type) { tmpl_type_ = tmpl_type; }
+  t_type* get_template_instance_type() { return tmpl_type_; }
+
 protected:
   t_type() : program_(nullptr) { ; }
 
@@ -99,6 +102,8 @@ protected:
 
   t_program* program_;
   std::string name_;
+  t_type* tmpl_type_;
+
 };
 
 /**
