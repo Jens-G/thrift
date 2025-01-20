@@ -80,8 +80,8 @@ public:
     validate_members();
   }
 
-  void set_template_type(std::string tmpl_type) { tmpl_type_ = tmpl_type; }
-  std::string get_template_type() { return tmpl_type_; }
+  void set_template_type(std::vector<std::string>* tmpl_type) { tmpl_type_ = tmpl_type; }
+  std::vector<std::string>* get_template_type() { return tmpl_type_; }
 
   void set_xsd_all(bool xsd_all) { xsd_all_ = xsd_all; }
   bool get_xsd_all() const { return xsd_all_; }
@@ -165,7 +165,7 @@ private:
   bool union_validated_;
   bool xcepts_validated_;
   int members_with_value_;
-  std::string tmpl_type_;
+  std::vector<std::string>* tmpl_type_;
 
   bool xsd_all_;
 
@@ -215,7 +215,7 @@ private:
     }
   }
 
-  bool needs_validation() {
+  bool needs_validation() const {
     if (is_method_xcepts_) {
       return !xcepts_validated_;
     }
