@@ -101,6 +101,8 @@ const int struct_is_union = 1;
   t_field::e_req ereq;
   t_annotation*  tannot;
   t_field_id     tfieldid;
+  std::vector<std::string>*   ids;
+  std::vector<t_type*>*        ttypes;
 }
 
 /**
@@ -203,8 +205,11 @@ const int struct_is_union = 1;
 %type<tstruct>   FieldList
 %type<tbool>     FieldReference
 
-%type<id>        TemplateDeclType
-%type<ttype>     TemplateImplType
+%type<ids>       TemplateDeclType
+%type<ttypes>    TemplateImplType
+
+%type<ids>       ReferencedIdentifierList
+%type<ttypes>    FieldTypeList
 
 %type<tenum>     Enum
 %type<tenum>     EnumDefList
@@ -639,7 +644,9 @@ Struct:
     {
       pdebug("Struct -> tok_struct tok_identifier { FieldList }");
       validate_simple_identifier( $2);
-      $6->set_template_type($3);
+      if ($3 != nullptr) {
+        $6->set_template_type($3);
+      }
       $6->set_xsd_all($4);
       $6->set_union($1 == struct_is_union);
       $$ = $6;
@@ -651,7 +658,7 @@ Struct:
     }
 
 TemplateDeclType:
-  '<' tok_identifier '>'
+  '<' ReferencedIdentifierList '>'
     {
       $$ = $2;
     }
@@ -661,7 +668,7 @@ TemplateDeclType:
     }
 
 TemplateImplType:
-  '<' FieldType '>'
+  '<' FieldTypeList '>'
     {
       $$ = $2;
     }
@@ -669,6 +676,42 @@ TemplateImplType:
     {
       $$ = nullptr;
     }
+
+ReferencedIdentifierList:
+    ReferencedIdentifierList  ','  tok_identifier
+    {
+      $$ = new std::vector<std::string>();
+      std::vector<std::string>::const_iterator tk_iter;
+      for (tk_iter = $1->begin(); tk_iter != $1->end(); ++tk_iter) {
+        $$->push_back(*tk_iter);
+      }
+	  $$->push_back($3);
+    }
+|
+    tok_identifier
+    {
+      $$ = new std::vector<std::string>();
+	  $$->push_back($1);
+    }
+
+
+FieldTypeList:
+    FieldTypeList  ','  FieldType
+    {
+      $$ = new std::vector<t_type*>();
+      std::vector<t_type*>::const_iterator ft_iter;
+      for (ft_iter = $1->begin(); ft_iter != $1->end(); ++ft_iter) {
+        $$->push_back(*ft_iter);
+      }
+	  $$->push_back($3);
+    }
+|
+    FieldType
+    {
+      $$ = new std::vector<t_type*>();
+	  $$->push_back($1);
+    }
+
 
 XsdAll:
   tok_xsd_all
@@ -711,16 +754,19 @@ XsdAttributes:
     }
 
 Xception:
-  tok_xception tok_identifier '{' FieldList '}' TypeAnnotations
+  tok_xception tok_identifier TemplateDeclType '{' FieldList '}' TypeAnnotations
     {
       pdebug("Xception -> tok_xception tok_identifier { FieldList }");
       validate_simple_identifier( $2);
-      $4->set_name($2);
-      $4->set_xception(true);
-      $$ = $4;
-      if ($6 != nullptr) {
-        $$->annotations_ = $6->annotations_;
-        delete $6;
+      if ($3 != nullptr) {
+        $5->set_template_type($3);
+      }
+      $5->set_name($2);
+      $5->set_xception(true);
+      $$ = $5;
+      if ($7 != nullptr) {
+        $$->annotations_ = $7->annotations_;
+        delete $7;
       }
     }
 
