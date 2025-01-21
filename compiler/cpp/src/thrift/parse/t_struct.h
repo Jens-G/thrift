@@ -48,6 +48,7 @@ public:
       union_validated_(false),
       xcepts_validated_(false),
       members_with_value_(0),
+      tmpl_decl_type_(nullptr),
       xsd_all_(false) {}
 
   t_struct(t_program* program, const std::string& name)
@@ -58,6 +59,7 @@ public:
       union_validated_(false),
       xcepts_validated_(false),
       members_with_value_(0),
+      tmpl_decl_type_(nullptr),
       xsd_all_(false) {}
 
   void set_name(const std::string& name) override {
@@ -80,8 +82,28 @@ public:
     validate_members();
   }
 
-  void set_template_type(std::vector<std::string>* tmpl_type) { tmpl_type_ = tmpl_type; }
-  std::vector<std::string>* get_template_type() { return tmpl_type_; }
+  void set_template_decl_type(std::vector<std::string>* tmpl_type) { tmpl_decl_type_ = tmpl_type; }
+
+  std::vector<std::string>* get_template_decl_type() const { return tmpl_decl_type_; }
+
+  void validate_template_instantiation() const {
+    if ((tmpl_decl_type_ == nullptr) || (get_template_instance_type() == nullptr)) {
+      if (tmpl_decl_type_ != nullptr) {
+        printf("Type %s is not generic and expects no type parameters\n", name_.c_str());
+        exit(1);
+      }
+      if (get_template_instance_type() != nullptr) {
+        printf("Missing type parameter for generic type %s\n", name_.c_str());
+        exit(1);
+      }
+    } else {
+      if (tmpl_decl_type_->size() != get_template_instance_type()->size()) {
+        printf("Generic type %s expects %d type parameters, but %d were specified\n",
+               name_.c_str(), tmpl_decl_type_->size(), get_template_instance_type()->size());
+        exit(1);
+      }
+    }
+  }
 
   void set_xsd_all(bool xsd_all) { xsd_all_ = xsd_all; }
   bool get_xsd_all() const { return xsd_all_; }
@@ -141,6 +163,8 @@ public:
       what = "exception";
     }
 
+    validate_template_instantiation();
+
     std::vector<t_field*>::const_iterator it;
     std::vector<t_field*> list = get_members();
     for(it=list.begin(); it != list.end(); ++it) {
@@ -165,7 +189,7 @@ private:
   bool union_validated_;
   bool xcepts_validated_;
   int members_with_value_;
-  std::vector<std::string>* tmpl_type_;
+  std::vector<std::string>* tmpl_decl_type_;
 
   bool xsd_all_;
 

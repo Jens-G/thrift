@@ -645,7 +645,7 @@ Struct:
       pdebug("Struct -> tok_struct tok_identifier { FieldList }");
       validate_simple_identifier( $2);
       if ($3 != nullptr) {
-        $6->set_template_type($3);
+        $6->set_template_decl_type($3);
       }
       $6->set_xsd_all($4);
       $6->set_union($1 == struct_is_union);
@@ -759,7 +759,7 @@ Xception:
       pdebug("Xception -> tok_xception tok_identifier { FieldList }");
       validate_simple_identifier( $2);
       if ($3 != nullptr) {
-        $5->set_template_type($3);
+        $5->set_template_decl_type($3);
       }
       $5->set_name($2);
       $5->set_xception(true);
