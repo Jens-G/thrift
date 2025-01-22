@@ -105,6 +105,19 @@ public:
     }
   }
 
+  std::map<std::string, t_type*>* map_template_types() {
+    validate_template_instantiation();
+    if (tmpl_decl_type_ == nullptr) {
+      return nullptr;
+    }
+    if (tmpl_decl_type_->size() == tmpl_mapped_types_.size()) {
+      return &tmpl_mapped_types_;
+    }
+
+    hier weiter
+
+  }
+
   void set_xsd_all(bool xsd_all) { xsd_all_ = xsd_all; }
   bool get_xsd_all() const { return xsd_all_; }
 
@@ -163,8 +176,6 @@ public:
       what = "exception";
     }
 
-    validate_template_instantiation();
-
     std::vector<t_field*>::const_iterator it;
     std::vector<t_field*> list = get_members();
     for(it=list.begin(); it != list.end(); ++it) {
@@ -190,6 +201,7 @@ private:
   bool xcepts_validated_;
   int members_with_value_;
   std::vector<std::string>* tmpl_decl_type_;
+  std::map<std::string, t_type*> tmpl_mapped_types_;
 
   bool xsd_all_;
 
