@@ -3497,7 +3497,7 @@ bool t_netstd_generator::is_nullable_type(t_type* ttype) {
 }
 
 
-string t_netstd_generator::nullable_suffix() {
+string t_netstd_generator::nullable_suffix() const {
   if(target_net_version >= 6) {
     return "?";
   } else {
@@ -3539,7 +3539,7 @@ string t_netstd_generator::nullable_field_suffix(t_type* ttype) {
   return nullable_suffix();
 }
 
-string t_netstd_generator::nullable_value_access(t_type* ttype) {
+string t_netstd_generator::nullable_value_access(t_type* ttype) const {
   if( target_net_version < 6)
     return "";
 

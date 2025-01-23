@@ -21,18 +21,27 @@
 #include "thrift/parse/t_typedef.h"
 #include "thrift/parse/t_program.h"
 
-t_type* t_typedef::get_type() {
-  return const_cast<t_type*>(const_cast<const t_typedef*>(this)->get_type());
+t_type* t_typedef::get_type(std::map<std::string, t_type*>* generic) {
+  return const_cast<t_type*>(const_cast<const t_typedef*>(this)->get_type(generic));
 }
 
-const t_type* t_typedef::get_type() const {
-  if (type_ == nullptr) {
-    const t_type* type = get_program()->scope()->get_type(symbolic_);
-    if (type == nullptr) {
-      printf("Type \"%s\" not defined\n", symbolic_.c_str());
-      exit(1);
-    }
+const t_type* t_typedef::get_type(std::map<std::string, t_type*>* generic) const {
+  if (type_ != nullptr) {
+    return type_;
+  }
+
+  const t_type* type = get_program()->scope()->get_type(symbolic_);
+  if ((type != nullptr) && (type != this)) {
     return type;
   }
-  return type_;
+
+  if (generic != nullptr) {
+    std::map<std::string, t_type*>::const_iterator iter = generic->find(symbolic_);
+    if ((iter != generic->end()) && (iter->second != this)) {
+      return iter->second;
+    }
+  }
+
+  printf("Type \"%s\" not defined\n", symbolic_.c_str());
+  exit(1);
 }

@@ -22,14 +22,14 @@
 
 #include "thrift/main.h"
 
-t_type* t_type::get_true_type() {
-  return const_cast<t_type*>(const_cast<const t_type*>(this)->get_true_type());
+t_type* t_type::get_true_type(std::map<std::string, t_type*>* generic) {
+  return const_cast<t_type*>(const_cast<const t_type*>(this)->get_true_type(generic));
 }
 
-const t_type* t_type::get_true_type() const {
+const t_type* t_type::get_true_type(std::map<std::string, t_type*>* generic) const {
   const t_type* type = this;
   while (type->is_typedef()) {
-    type = ((t_typedef*)type)->get_type();
+    type = ((t_typedef*)type)->get_type(generic);
   }
   return type;
 }
