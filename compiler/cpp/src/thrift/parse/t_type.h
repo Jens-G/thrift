@@ -67,8 +67,8 @@ public:
 
   const t_program* get_program() const { return program_; }
 
-  t_type* get_true_type();
-  const t_type* get_true_type() const;
+  t_type* get_true_type(std::map<std::string, t_type*>* generic = nullptr);
+  const t_type* get_true_type(std::map<std::string, t_type*>* generic = nullptr) const;
 
   // This function will break (maybe badly) unless 0 <= num <= 16.
   static char nybble_to_xdigit(int num) {
