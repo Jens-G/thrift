@@ -62,7 +62,7 @@ public:
   t_netstd_generator(t_program* program, const map<string, string>& parsed_options, const string& option_string);
 
   bool is_wcf_enabled() const;
-  bool is_hashcode_enabled() const;
+  //bool is_hashcode_enabled() const;
   bool is_serialize_enabled() const;
   bool is_union_enabled() const;
 
@@ -170,7 +170,7 @@ private:
   string namespace_dir_;
 
   bool union_;
-  bool hashcode_;
+  //bool hashcode_;
   bool serialize_;
   bool wcf_;
   bool use_pascal_case_properties;
@@ -222,8 +222,8 @@ private:
   bool is_deprecated(std::map<std::string, std::vector<std::string>>& annotations);
   bool is_nullable_type(t_type* ttype);
   bool force_member_nullable(t_field* tfield);  // see there
-  string nullable_suffix();                     // unconditionally
+  string nullable_suffix() const;                     // unconditionally
   string nullable_field_suffix(t_field* tfield);  // depends on field type
   string nullable_field_suffix(t_type* ttype);  // depends on field type
-  string nullable_value_access(t_type* ttype);  // depends on field type
+  string nullable_value_access(t_type* ttype) const;  // depends on field type
 };

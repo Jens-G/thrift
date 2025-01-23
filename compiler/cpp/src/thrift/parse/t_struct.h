@@ -107,15 +107,27 @@ public:
 
   std::map<std::string, t_type*>* map_template_types() {
     validate_template_instantiation();
+
     if (tmpl_decl_type_ == nullptr) {
       return nullptr;
     }
-    if (tmpl_decl_type_->size() == tmpl_mapped_types_.size()) {
-      return &tmpl_mapped_types_;
+
+    if (tmpl_decl_type_->size() != tmpl_mapped_types_.size()) {
+      int expected_count = 0;
+      std::vector<std::string>::iterator itKey = tmpl_decl_type_->begin();
+      std::vector<t_type*>::iterator itVal = get_template_instance_type()->begin();
+      while ((tmpl_decl_type_->end() != itKey) && (get_template_instance_type()->end() != itVal)) {
+        tmpl_mapped_types_[*itKey] = *itVal;
+        if (++expected_count != tmpl_mapped_types_.size()) {
+          printf("Duplicate type parameter %s at %s\n", itKey->c_str(), name_.c_str());
+          exit(1);
+        }
+        ++itKey;
+        ++itVal;
+      }
     }
 
-    hier weiter
-
+    return &tmpl_mapped_types_;
   }
 
   void set_xsd_all(bool xsd_all) { xsd_all_ = xsd_all; }
