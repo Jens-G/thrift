@@ -94,7 +94,7 @@ public:
    */
   virtual std::string escape_string(const std::string& in) const;
 
-  std::string get_escaped_string(t_const_value* constval) {
+  std::string get_escaped_string(t_const_value* constval) const {
     return escape_string(constval->get_string());
   }
 
@@ -164,6 +164,14 @@ protected:
     generate_struct(txception);
   }
 
+  // generics support
+  virtual void generate_generic_forward_declaration(t_typedef* ttypedef) {}
+  virtual void generate_generic_instance(t_typedef* ttypedef) {
+    pwarning(0, "%s: Generic type generation not implemented: %s\n",
+             this->display_name().c_str(),
+             ttypedef->get_name().c_str());
+  }
+
   /**
    * Method to get the program name, may be overridden
    */
@@ -222,9 +230,9 @@ protected:
   /**
   * Indentation validation helper
   */
-  int indent_count() { return indent_; }
+  int indent_count() const { return indent_; }
 
-  void indent_validate( int expected, const char * func_name) {
+  void indent_validate( int expected, const char * func_name) const {
     if (indent_ != expected) { 
       pverbose("Wrong indent count in %s: difference = %i \n", func_name, (expected - indent_));
     }
@@ -320,7 +328,7 @@ protected:
       std::stringstream double_output_stream;
       // sets the maximum precision: http://en.cppreference.com/w/cpp/io/manip/setprecision
       // sets the output format to fixed: http://en.cppreference.com/w/cpp/io/manip/fixed (not in scientific notation)
-      double_output_stream << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+      double_output_stream << std::setprecision(static_cast<std::streamsize>(std::numeric_limits<double>::digits10) + 1);
 
       #ifdef _MSC_VER
           // strtod is broken in MSVC compilers older than 2015, so std::fixed fails to format a double literal.
