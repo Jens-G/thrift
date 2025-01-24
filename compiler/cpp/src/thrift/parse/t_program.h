@@ -362,6 +362,16 @@ public:
 
   bool get_recursive() const { return recursive_; }
 
+  virtual t_typedef* instantiate_template_type(std::string symbolic, std::vector<t_type*>* tmpl_type) {
+    if ((tmpl_type == nullptr) || (tmpl_type->size() == 0)) {
+      return nullptr;
+    }
+
+    t_typedef* instance = new t_typedef(this, symbolic, tmpl_type);
+    scope()->add_type(instance->get_symbolic(), instance);
+    return instance;
+  }
+
 private:
   // File path
   std::string path_;
