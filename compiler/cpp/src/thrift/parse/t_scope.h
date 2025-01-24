@@ -209,6 +209,7 @@ public:
     }
   }
 
+
 private:
   // Map of names to types
   std::map<std::string, t_type*> types_;

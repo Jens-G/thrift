@@ -42,7 +42,18 @@ void t_generator::generate_program() {
   vector<t_typedef*> typedefs = program_->get_typedefs();
   vector<t_typedef*>::iterator td_iter;
   for (td_iter = typedefs.begin(); td_iter != typedefs.end(); ++td_iter) {
-    generate_typedef(*td_iter);
+    if ((*td_iter)->is_generic_instance()) {
+      generate_generic_forward_declaration(*td_iter);
+    } else {
+      generate_typedef(*td_iter);
+    }
+  }
+
+  // generate generics instances
+  for (td_iter = typedefs.begin(); td_iter != typedefs.end(); ++td_iter) {
+    if ((*td_iter)->is_generic_instance()) {
+      generate_generic_instance(*td_iter);
+    }
   }
 
   // Generate structs, exceptions, and unions in declared order
@@ -50,13 +61,17 @@ void t_generator::generate_program() {
 
   vector<t_struct*>::iterator o_iter;
   for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
-    generate_forward_declaration(*o_iter);
+    if (!(*o_iter)->is_generic_type()) {
+      generate_forward_declaration(*o_iter);
+    }
   }
   for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
-    if ((*o_iter)->is_xception()) {
-      generate_xception(*o_iter);
-    } else {
-      generate_struct(*o_iter);
+    if (!(*o_iter)->is_generic_type()) {
+      if ((*o_iter)->is_xception()) {
+        generate_xception(*o_iter);
+      } else {
+        generate_struct(*o_iter);
+      }
     }
   }
 

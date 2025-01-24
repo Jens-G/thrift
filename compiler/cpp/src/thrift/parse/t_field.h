@@ -61,9 +61,9 @@ public:
 
   ~t_field() override = default;
 
-  t_type* get_type(std::map<std::string, t_type*>* generic = nullptr) { return type_; }
+  t_type* get_type(std::map<std::string, mapped_type>* generic = nullptr) { return type_; }
 
-  const t_type* get_type(std::map<std::string, t_type*>* generic = nullptr) const { return type_; }
+  const t_type* get_type(std::map<std::string, mapped_type>* generic = nullptr) const { return type_; }
 
   const std::string& get_name() const { return name_; }
 

@@ -123,22 +123,22 @@ public:
                          t_field* tfield,
                          bool isPublic,
                          bool is_xception,
-                         std::map<std::string, t_type*>* generic = nullptr);
+                         std::map<std::string, mapped_type>* generic = nullptr);
 
   void generate_delphi_property(ostream& out,
                                 bool struct_is_exception,
                                 t_field* tfield,
                                 bool isPublic,
-                                std::map<std::string, t_type*>* generic = nullptr);
+                                std::map<std::string, mapped_type>* generic = nullptr);
   void generate_delphi_isset_reader_writer_definition(ostream& out, t_field* tfield, bool is_xception);
   void generate_delphi_property_reader_definition(ostream& out,
                                                   t_field* tfield,
                                                   bool is_xception_class,
-                                                  std::map<std::string, t_type*>* generic);
+                                                  std::map<std::string, mapped_type>* generic);
   void generate_delphi_property_writer_definition(ostream& out,
                                                   t_field* tfield,
                                                   bool is_xception_class,
-                                                  std::map<std::string, t_type*>* generic);
+                                                  std::map<std::string, mapped_type>* generic);
   void generate_delphi_property_reader_impl(ostream& out,
                                             std::string cls_prefix,
                                             std::string name,
@@ -146,7 +146,7 @@ public:
                                             t_field* tfield,
                                             std::string fieldPrefix,
                                             bool is_xception_class,
-                                            std::map<std::string, t_type*>* generic = nullptr);
+                                            std::map<std::string, mapped_type>* generic = nullptr);
   void generate_delphi_property_writer_impl(ostream& out,
                                             std::string cls_prefix,
                                             std::string name,
@@ -155,7 +155,7 @@ public:
                                             std::string fieldPrefix,
                                             bool is_xception_class,
                                             bool is_union,
-                                            std::map<std::string, t_type*>* generic = nullptr);
+                                            std::map<std::string, mapped_type>* generic = nullptr);
   void generate_delphi_clear_union_value(ostream& out,
                                          std::string cls_prefix,
                                          std::string name,
@@ -164,7 +164,7 @@ public:
                                          std::string fieldPrefix,
                                          bool is_xception_class,
                                          bool is_union,
-                                         std::map<std::string, t_type*>* generic = nullptr);
+                                         std::map<std::string, mapped_type>* generic = nullptr);
   void generate_delphi_isset_reader_writer_impl(ostream& out,
                                                 std::string cls_prefix,
                                                 std::string name,
@@ -176,13 +176,13 @@ public:
                                           std::string cls_prefix,
                                           t_struct* tstruct,
                                           bool is_exception,
-                                          std::map<std::string, t_type*>* generic = nullptr);
+                                          std::map<std::string, mapped_type>* generic = nullptr);
 
   void generate_delphi_struct_tostring_impl(ostream& out,
                                             std::string cls_prefix,
                                             t_struct* tstruct,
                                             bool is_exception,
-                                            std::map<std::string, t_type*>* generic = nullptr);
+                                            std::map<std::string, mapped_type>* generic = nullptr);
 
   void add_delphi_uses_list(string unitname);
 
@@ -190,7 +190,7 @@ public:
                                           std::string cls_prefix,
                                           t_struct* tstruct,
                                           bool is_exception,
-                                          std::map<std::string, t_type*>* generic = nullptr);
+                                          std::map<std::string, mapped_type>* generic = nullptr);
 
   bool is_deprecated(std::map<std::string, std::vector<std::string>>& annotations);
   std::string render_deprecation_attribute(std::map<std::string, std::vector<std::string>>& annotations, std::string prefix, std::string postfix);
@@ -280,7 +280,7 @@ public:
                                   t_field* tfield,
                                   std::string prefix,
                                   std::ostream& local_vars,
-                                  std::map<std::string, t_type*>* generic = nullptr);
+                                  std::map<std::string, mapped_type>* generic = nullptr);
   void generate_deserialize_struct(std::ostream& out,
                                    t_struct* tstruct,
                                    std::string name,
@@ -290,33 +290,33 @@ public:
                                       t_type* ttype,
                                       string name,
                                       std::ostream& local_vars,
-                                      std::map<std::string, t_type*>* generic = nullptr);
+                                      std::map<std::string, mapped_type>* generic = nullptr);
 
   void generate_deserialize_set_element(std::ostream& out,
                                         bool is_xception,
                                         t_set* tset,
                                         std::string prefix,
                                         std::ostream& local_vars,
-                                        std::map<std::string, t_type*>* generic = nullptr);
+                                        std::map<std::string, mapped_type>* generic = nullptr);
   void generate_deserialize_map_element(std::ostream& out,
                                         bool is_xception,
                                         t_map* tmap,
                                         std::string prefix,
                                         std::ostream& local_vars,
-                                        std::map<std::string, t_type*>* generic = nullptr);
+                                        std::map<std::string, mapped_type>* generic = nullptr);
   void generate_deserialize_list_element(std::ostream& out,
                                          bool is_xception,
                                          t_list* list,
                                          std::string prefix,
                                          std::ostream& local_vars,
-                                         std::map<std::string, t_type*>* generic = nullptr);
+                                         std::map<std::string, mapped_type>* generic = nullptr);
 
   void generate_serialize_field(std::ostream& out,
                                 bool is_xception,
                                 t_field* tfield,
                                 std::string prefix,
                                 std::ostream& local_vars,
-                                std::map<std::string, t_type*>* generic = nullptr);
+                                std::map<std::string, mapped_type>* generic = nullptr);
   void generate_serialize_struct(std::ostream& out,
                                  t_struct* tstruct,
                                  std::string prefix,
@@ -326,33 +326,33 @@ public:
                                     t_type* ttype,
                                     std::string prefix,
                                     std::ostream& local_vars,
-                                    std::map<std::string, t_type*>* generic = nullptr);
+                                    std::map<std::string, mapped_type>* generic = nullptr);
   void generate_serialize_map_element(std::ostream& out,
                                       bool is_xception,
                                       t_map* tmap,
                                       std::string iter,
                                       std::string map,
                                       std::ostream& local_vars,
-                                      std::map<std::string, t_type*>* generic = nullptr);
+                                      std::map<std::string, mapped_type>* generic = nullptr);
   void generate_serialize_set_element(std::ostream& out,
                                       bool is_xception,
                                       t_set* tmap,
                                       std::string iter,
                                       std::ostream& local_vars,
-                                      std::map<std::string, t_type*>* generic = nullptr);
+                                      std::map<std::string, mapped_type>* generic = nullptr);
   void generate_serialize_list_element(std::ostream& out,
                                        bool is_xception,
                                        t_list* tlist,
                                        std::string iter,
                                        std::ostream& local_vars,
-                                       std::map<std::string, t_type*>* generic = nullptr);
+                                       std::map<std::string, mapped_type>* generic = nullptr);
 
   void delphi_type_usings(std::ostream& out);
 
   std::string type_name(t_type* ttype,
                         bool b_cls = false,
                         bool b_no_postfix = false,
-                        std::map<std::string, t_type*>* generic = nullptr);
+                        std::map<std::string, mapped_type>* generic = nullptr);
   std::string normalize_clsnm(std::string name,
                               std::string prefix,
                               bool b_no_check_keyword = false);
@@ -364,7 +364,7 @@ public:
   std::string declare_field(t_field* tfield,
                             std::string prefix = "",
                             bool is_xception_class = false,
-                            std::map<std::string, t_type*>* generic = nullptr);
+                            std::map<std::string, mapped_type>* generic = nullptr);
   std::string function_signature(t_function* tfunction,
                                  bool for_async,
                                  std::string full_cls = "",
@@ -372,8 +372,8 @@ public:
   std::string argument_list(t_struct* tstruct);
   std::string constructor_argument_list(t_struct* tstruct,
                                         std::string current_indent,
-                                        std::map<std::string, t_type*>* generic = nullptr);
-  std::string type_to_enum(t_type* ttype, std::map<std::string, t_type*>* generic = nullptr);
+                                        std::map<std::string, mapped_type>* generic = nullptr);
+  std::string type_to_enum(t_type* ttype, std::map<std::string, mapped_type>* generic = nullptr);
   std::string prop_name(t_field* tfield, bool is_xception = false, std::string prefix = "");
   std::string prop_name(std::string name, bool is_xception = false, std::string prefix = "");
   std::string constructor_param_name(string name);
@@ -394,7 +394,7 @@ public:
   void generate_delphi_doc(std::ostream& out, t_function* tdoc);
   void generate_delphi_docstring_comment(std::ostream& out, string contents);
 
-  bool type_can_be_null(t_type* ttype, std::map<std::string, t_type*>* generic = nullptr) {
+  bool type_can_be_null(t_type* ttype, std::map<std::string, mapped_type>* generic = nullptr) {
     ttype = ttype->get_true_type(generic);
     return ttype->is_container() || ttype->is_struct() || ttype->is_xception();
   }
@@ -1413,7 +1413,7 @@ void t_delphi_generator::generate_delphi_struct_impl(ostream& out,
   (void)is_result;
 
   string cls_nm = type_name(tstruct, true, false);
-  std::map<std::string, t_type*>* generic = tstruct->map_template_types();
+  std::map<std::string, mapped_type>* generic = tstruct->map_template_types();
 
   std::ostringstream vars, code;
 
@@ -1519,7 +1519,7 @@ void t_delphi_generator::generate_delphi_exception_impl(ostream& out,
   string cls_nm = type_name(tstruct, true, true/*, false, true*/);
 
   const vector<t_field*>& members = tstruct->get_members();
-  std::map<std::string, t_type*>* generic = tstruct->map_template_types();
+  std::map<std::string, mapped_type>* generic = tstruct->map_template_types();
   vector<t_field*>::const_iterator m_iter;
 
   indent_impl(out) << "constructor " << cls_prefix << cls_nm << ".Create;" << '\n';
@@ -1696,7 +1696,7 @@ void t_delphi_generator::generate_delphi_struct_definition(ostream& out,
     generate_guid_v8(out, tstruct);
   }
 
-  std::map<std::string, t_type*>* generic = tstruct->map_template_types();
+  std::map<std::string, mapped_type>* generic = tstruct->map_template_types();
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
     generate_delphi_property_reader_definition(out, *m_iter, false, generic);
     generate_delphi_property_writer_definition(out, *m_iter, false, generic);
@@ -1847,7 +1847,7 @@ void t_delphi_generator::generate_delphi_exception_definition(ostream& out,
   indent(out) << "FData : " << struct_intf_name << ';' << '\n';
   indent(out) << '\n';
 
-  std::map<std::string, t_type*>* generic = tstruct->map_template_types();
+  std::map<std::string, mapped_type>* generic = tstruct->map_template_types();
   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
     generate_delphi_property_reader_definition(out, *m_iter, true, generic);
     generate_delphi_property_writer_definition(out, *m_iter, true, generic);
@@ -2829,7 +2829,7 @@ void t_delphi_generator::generate_deserialize_field(ostream& out,
                                                     t_field* tfield,
                                                     string prefix,
                                                     ostream& local_vars,
-                                                    std::map<std::string, t_type*>* generic) {
+                                                    std::map<std::string, mapped_type>* generic) {
   t_type* type = tfield->get_type()->get_true_type(generic);
 
   if (type->is_void()) {
@@ -2917,7 +2917,7 @@ void t_delphi_generator::generate_deserialize_container(ostream& out,
                                                         t_type* ttype,
                                                         string name,
                                                         std::ostream& local_vars,
-                                                        std::map<std::string, t_type*>* generic) {
+                                                        std::map<std::string, mapped_type>* generic) {
 
   string obj;
   string counter;
@@ -2979,7 +2979,7 @@ void t_delphi_generator::generate_deserialize_map_element(ostream& out,
                                                           t_map* tmap,
                                                           string prefix,
                                                           ostream& local_vars,
-                                                          std::map<std::string, t_type*>* generic) {
+                                                          std::map<std::string, mapped_type>* generic) {
 
   string key = tmp("_key");
   string val = tmp("_val");
@@ -3002,7 +3002,7 @@ void t_delphi_generator::generate_deserialize_set_element(ostream& out,
                                                           t_set* tset,
                                                           string prefix,
                                                           ostream& local_vars,
-                                                          std::map<std::string, t_type*>* generic) {
+                                                          std::map<std::string, mapped_type>* generic) {
   string elem = tmp("_elem");
   t_field felem(tset->get_elem_type(), elem);
   local_vars << "  " << declare_field(&felem) << '\n';
@@ -3015,7 +3015,7 @@ void t_delphi_generator::generate_deserialize_list_element(ostream& out,
                                                            t_list* tlist,
                                                            string prefix,
                                                            ostream& local_vars,
-                                                           std::map<std::string, t_type*>* generic) {
+                                                           std::map<std::string, mapped_type>* generic) {
   string elem = tmp("_elem");
   t_field felem(tlist->get_elem_type(), elem);
   local_vars << "  " << declare_field(&felem, "", false, generic) << '\n';
@@ -3028,7 +3028,7 @@ void t_delphi_generator::generate_serialize_field(ostream& out,
                                                   t_field* tfield,
                                                   string prefix,
                                                   ostream& local_vars,
-                                                  std::map<std::string, t_type*>* generic) {
+                                                  std::map<std::string, mapped_type>* generic) {
   (void)local_vars;
 
   t_type* type = tfield->get_type()->get_true_type(generic);
@@ -3112,7 +3112,7 @@ void t_delphi_generator::generate_serialize_container(ostream& out,
                                                       t_type* ttype,
                                                       string prefix,
                                                       ostream& local_vars,
-                                                      std::map<std::string, t_type*>* generic) {
+                                                      std::map<std::string, mapped_type>* generic) {
   string obj;
   if (ttype->is_map()) {
     obj = tmp("map");
@@ -3181,7 +3181,7 @@ void t_delphi_generator::generate_serialize_map_element(ostream& out,
                                                         string iter,
                                                         string map,
                                                         ostream& local_vars,
-                                                        std::map<std::string, t_type*>* generic) {
+                                                        std::map<std::string, mapped_type>* generic) {
   t_field kfield(tmap->get_key_type(), iter);
   generate_serialize_field(out, is_xception, &kfield, "", local_vars, generic);
   t_field vfield(tmap->get_val_type(), map + "[" + iter + "]");
@@ -3193,7 +3193,7 @@ void t_delphi_generator::generate_serialize_set_element(ostream& out,
                                                         t_set* tset,
                                                         string iter,
                                                         ostream& local_vars,
-                                                        std::map<std::string, t_type*>* generic) {
+                                                        std::map<std::string, mapped_type>* generic) {
   t_field efield(tset->get_elem_type(), iter);
   generate_serialize_field(out, is_xception, &efield, "", local_vars, generic);
 }
@@ -3203,7 +3203,7 @@ void t_delphi_generator::generate_serialize_list_element(ostream& out,
                                                          t_list* tlist,
                                                          string iter,
                                                          ostream& local_vars,
-                                                         std::map<std::string, t_type*>* generic) {
+                                                         std::map<std::string, mapped_type>* generic) {
   t_field efield(tlist->get_elem_type(), iter);
   generate_serialize_field(out, is_xception, &efield, "", local_vars, generic);
 }
@@ -3212,7 +3212,7 @@ void t_delphi_generator::generate_property(ostream& out,
                                            t_field* tfield,
                                            bool isPublic,
                                            bool is_xception,
-                                           std::map<std::string, t_type*>* generic) {
+                                           std::map<std::string, mapped_type>* generic) {
   generate_delphi_property(out, is_xception, tfield, isPublic, generic);
 }
 
@@ -3220,7 +3220,7 @@ void t_delphi_generator::generate_delphi_property(ostream& out,
                                                   bool struct_is_xception,
                                                   t_field* tfield,
                                                   bool isPublic,
-                                                  std::map<std::string, t_type*>* generic) {
+                                                  std::map<std::string, mapped_type>* generic) {
   (void)isPublic;
 
   t_type* ftype = tfield->get_type();
@@ -3264,14 +3264,16 @@ string t_delphi_generator::normalize_clsnm(string clsnm, string prefix, bool b_n
 string t_delphi_generator::type_name(t_type* ttype,
                                      bool b_cls,
                                      bool b_no_postfix,
-                                     std::map<std::string, t_type*>* generic) {
+                                     std::map<std::string, mapped_type>* generic) {
 
   if (ttype->is_typedef()) {
     t_typedef* tdef = (t_typedef*)ttype;
     if (tdef->is_forward_typedef()) { // forward types according to THRIFT-2421
-      t_type* resolved = tdef->get_type(generic);
-      if (resolved != nullptr) {
-        return type_name(resolved, b_cls, b_no_postfix, generic);
+      mapped_type resolved = tdef->get_generic_type(generic);
+      if (resolved.get_type() != nullptr) {
+        return type_name(resolved.get_type(), b_cls, b_no_postfix, generic);
+      } else if(resolved.is_generic_decl()) {
+        return normalize_name(resolved.symbolic());
       } else {
         throw "Unresolved forward declaration: Used type never defined: " + tdef->get_symbolic();
       }
@@ -3420,7 +3422,7 @@ string t_delphi_generator::base_type_name(t_base_type* tbase) const {
 string t_delphi_generator::declare_field(t_field* tfield,
                                          std::string prefix,
                                          bool is_xception_class,
-                                         std::map<std::string, t_type*>* generic) {
+                                         std::map<std::string, mapped_type>* generic) {
   t_type* ftype = tfield->get_type();
 
   string result = prop_name(tfield, is_xception_class, prefix) + ": "
@@ -3495,7 +3497,7 @@ string t_delphi_generator::argument_list(t_struct* tstruct) {
 
 string t_delphi_generator::constructor_argument_list(t_struct* tstruct,
                                                      string current_indent,
-                                                     std::map<std::string, t_type*>* generic) {
+                                                     std::map<std::string, mapped_type>* generic) {
   ostringstream result;
   const vector<t_field*>& fields = tstruct->get_members();
   vector<t_field*>::const_iterator f_iter;
@@ -3545,7 +3547,7 @@ string t_delphi_generator::constructor_argument_list(t_struct* tstruct,
   return result_str;
 }
 
-string t_delphi_generator::type_to_enum(t_type* type, std::map<std::string, t_type*>* generic) {
+string t_delphi_generator::type_to_enum(t_type* type, std::map<std::string, mapped_type>* generic) {
   type = type->get_true_type(generic);
 
   if (type->is_base_type()) {
@@ -3629,7 +3631,7 @@ string t_delphi_generator::empty_value(t_type* type) {
 void t_delphi_generator::generate_delphi_property_writer_definition(ostream& out,
                                                                     t_field* tfield,
                                                                     bool is_xception_class,
-                                                                    std::map<std::string, t_type*>* generic) {
+                                                                    std::map<std::string, mapped_type>* generic) {
   t_type* ftype = tfield->get_type(generic);
 
   indent(out) << "procedure " << prop_name(tfield, is_xception_class, "Set")
@@ -3641,7 +3643,7 @@ void t_delphi_generator::generate_delphi_property_writer_definition(ostream& out
 void t_delphi_generator::generate_delphi_property_reader_definition(ostream& out,
                                                                     t_field* tfield,
                                                                     bool is_xception_class,
-                                                                    std::map<std::string, t_type*>* generic) {
+                                                                    std::map<std::string, mapped_type>* generic) {
   t_type* ftype = tfield->get_type(generic);
 
   indent(out) << "function " << prop_name(tfield, is_xception_class, "Get") << ": "
@@ -3666,7 +3668,7 @@ void t_delphi_generator::generate_delphi_clear_union_value(ostream& out,
                                                            std::string fieldPrefix,
                                                            bool is_xception_class,
                                                            bool is_union,
-                                                           std::map<std::string, t_type*>* generic) {
+                                                           std::map<std::string, mapped_type>* generic) {
   (void)cls_prefix;
   (void)name;
   (void)type;
@@ -3692,7 +3694,7 @@ void t_delphi_generator::generate_delphi_property_writer_impl(ostream& out,
                                                               std::string fieldPrefix,
                                                               bool is_xception_class,
                                                               bool is_union,
-                                                              std::map<std::string, t_type*>* generic) {
+                                                              std::map<std::string, mapped_type>* generic) {
   (void)type;
 
   t_type* ftype = tfield->get_type();
@@ -3726,7 +3728,7 @@ void t_delphi_generator::generate_delphi_property_reader_impl(ostream& out,
                                                               t_field* tfield,
                                                               std::string fieldPrefix,
                                                               bool is_xception_class,
-                                                              std::map<std::string, t_type*>* generic) {
+                                                              std::map<std::string, mapped_type>* generic) {
   (void)type;
 
   t_type* ftype = tfield->get_type();
@@ -3786,7 +3788,7 @@ void t_delphi_generator::generate_delphi_struct_reader_impl(ostream& out,
                                                             string cls_prefix,
                                                             t_struct* tstruct,
                                                             bool is_exception,
-                                                            std::map<std::string, t_type*>* generic) {
+                                                            std::map<std::string, mapped_type>* generic) {
 
   ostringstream local_vars;
   ostringstream code_block;
@@ -3930,7 +3932,7 @@ void t_delphi_generator::generate_delphi_struct_writer_impl(ostream& out,
                                                             string cls_prefix,
                                                             t_struct* tstruct,
                                                             bool is_exception,
-                                                            std::map<std::string, t_type*>* generic) {
+                                                            std::map<std::string, mapped_type>* generic) {
 
   ostringstream local_vars;
   ostringstream code_block;
@@ -4018,7 +4020,7 @@ void t_delphi_generator::generate_delphi_struct_tostring_impl(ostream& out,
                                                               string cls_prefix,
                                                               t_struct* tstruct,
                                                               bool is_exception,
-                                                              std::map<std::string, t_type*>* generic) {
+                                                              std::map<std::string, mapped_type>* generic) {
 
   const vector<t_field*>& fields = tstruct->get_members();
   vector<t_field*>::const_iterator f_iter;
