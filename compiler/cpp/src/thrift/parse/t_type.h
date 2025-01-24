@@ -88,32 +88,29 @@ public:
 
   std::map<std::string, std::vector<std::string>> annotations_;
 
-  void instantiate_template_type(std::vector<t_type*>* tmpl_type) { tmpl_inst_type_ = tmpl_type; }
+  virtual std::vector<std::string>* get_template_decl_type() const { return nullptr; }
+  virtual std::vector<t_type*>* get_template_instance_type() const { return nullptr; }
+  virtual t_type* instantiate_template_type(std::vector<t_type*>* tmpl_type) { return nullptr; }
+  virtual std::map<std::string, t_type*>* map_template_types() { return nullptr; }
 
-  std::vector<t_type*>* get_template_instance_type() const { return tmpl_inst_type_; }
 
 protected:
   t_type()
-    : program_(nullptr), 
-      tmpl_inst_type_(nullptr) { ; }
+    : program_(nullptr) { ; }
 
   t_type(t_program* program)
-    : program_(program),
-      tmpl_inst_type_(nullptr) { ; }
+    : program_(program) { ; }
 
   t_type(t_program* program, std::string name)
     : program_(program),
-      name_(name),
-      tmpl_inst_type_(nullptr) { ; }
+      name_(name) { ; }
 
   t_type(std::string name)
     : program_(nullptr),
-      tmpl_inst_type_(nullptr),
       name_(name) { ; }
 
   t_program* program_;
   std::string name_;
-  std::vector<t_type*>* tmpl_inst_type_;
 
 };
 

@@ -1210,7 +1210,12 @@ FieldType:
            */
           $$ = new t_typedef(g_program, $1, true);
         }
-        $$->instantiate_template_type($2);
+
+        // generics instantiation
+        t_type* instance = $$->instantiate_template_type($2);
+        if( instance != nullptr) {
+            $$ = instance;
+        }
       }
     }
 | BaseType
