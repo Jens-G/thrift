@@ -49,8 +49,7 @@ public:
       type_(nullptr),
       tmpl_inst_type_(nullptr),
       symbolic_(symbolic),
-      forward_(forward)
-  {}
+      forward_(forward) {}
 
   t_typedef(t_program* program, const std::string& symbolic, std::vector<t_type*>* tmpl_type)
     : t_type(program, symbolic),
@@ -67,7 +66,9 @@ public:
 
   const std::string& get_symbolic() const { return symbolic_; }
 
-  bool is_generic_instance() const { return (tmpl_inst_type_ != nullptr) && (tmpl_inst_type_->size() > 0); }
+  bool is_generic_instance() const {
+    return (tmpl_inst_type_ != nullptr) && (tmpl_inst_type_->size() > 0);
+  }
 
   bool is_forward_typedef() const { return forward_; }
 
@@ -106,7 +107,6 @@ public:
     return &tmpl_mapped_generic_types_;
   }
 
-
 private:
   t_type* type_;
   std::string symbolic_;
@@ -117,24 +117,27 @@ private:
   void validate_template_instantiation(const std::vector<std::string>* decls) const {
     std::vector<t_type*>* instance = get_template_instance_type();
 
-    // both must be either null or non-null
-    if ((decls == nullptr) ^ (instance != nullptr)) {
-      if (decls == nullptr) {
-        printf("Type %s is not generic and expects no type parameters\n", name_.c_str());
-        exit(1);
-      } else {
+    // either one null?
+    if ((decls == nullptr) || (instance == nullptr)) {
+      if (decls != nullptr) {
         printf("Missing type parameter for generic type %s\n", name_.c_str());
         exit(1);
       }
+      if (instance != nullptr) {
+        printf("Type %s is not generic and expects no type parameters\n", name_.c_str());
+        exit(1);
+      }
+      return; // both null is ok
     }
 
     // same number of type parameters expected
     if (decls->size() != instance->size()) {
-      printf("Generic type %s expects %d type parameters, but %d were specified\n",
-          name_.c_str(), decls->size(), instance->size());
+      printf("Generic type %s expects %d type parameters, but %d were specified\n", name_.c_str(),
+             decls->size(), instance->size());
       exit(1);
     }
   }
+
 };
 
 #endif
