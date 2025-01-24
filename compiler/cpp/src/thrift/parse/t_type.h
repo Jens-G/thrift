@@ -30,6 +30,32 @@
 
 class t_program;
 
+
+/**
+* Mapped generic type, either instantiated or declaration
+*/
+struct mapped_type {
+  mapped_type() : symbolic_(""), ttype_(nullptr), is_generic_decl_(false) {}
+
+  mapped_type(std::string symbolic, t_type* ttype)
+    : symbolic_(symbolic), ttype_(ttype), is_generic_decl_(false) {}
+
+  mapped_type(std::string symbolic, bool is_generic_decl)
+    : symbolic_(symbolic), ttype_(nullptr), is_generic_decl_(is_generic_decl) {}
+
+  t_type* get_type() const { return ttype_; }
+
+  bool is_generic_decl() const { return is_generic_decl_; }
+
+  std::string symbolic() const { return symbolic_; }
+
+private:
+  t_type* ttype_;
+  bool is_generic_decl_;
+  std::string symbolic_;
+};
+
+
 /**
  * Generic representation of a thrift type. These objects are used by the
  * parser module to build up a tree of object that are all explicitly typed.
@@ -67,8 +93,8 @@ public:
 
   const t_program* get_program() const { return program_; }
 
-  t_type* get_true_type(std::map<std::string, t_type*>* generic = nullptr);
-  const t_type* get_true_type(std::map<std::string, t_type*>* generic = nullptr) const;
+  t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr);
+  const t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr) const;
 
   // This function will break (maybe badly) unless 0 <= num <= 16.
   static char nybble_to_xdigit(int num) {
@@ -88,32 +114,27 @@ public:
 
   std::map<std::string, std::vector<std::string>> annotations_;
 
-  void instantiate_template_type(std::vector<t_type*>* tmpl_type) { tmpl_inst_type_ = tmpl_type; }
-
-  std::vector<t_type*>* get_template_instance_type() const { return tmpl_inst_type_; }
+  virtual std::vector<std::string>* get_template_decl_type() const { return nullptr; }
+  virtual std::vector<t_type*>* get_template_instance_type() const { return nullptr; }
+  virtual std::map<std::string, mapped_type>* map_template_types() { return nullptr; }
 
 protected:
   t_type()
-    : program_(nullptr), 
-      tmpl_inst_type_(nullptr) { ; }
+    : program_(nullptr) { ; }
 
   t_type(t_program* program)
-    : program_(program),
-      tmpl_inst_type_(nullptr) { ; }
+    : program_(program) { ; }
 
   t_type(t_program* program, std::string name)
     : program_(program),
-      name_(name),
-      tmpl_inst_type_(nullptr) { ; }
+      name_(name) { ; }
 
   t_type(std::string name)
     : program_(nullptr),
-      tmpl_inst_type_(nullptr),
       name_(name) { ; }
 
   t_program* program_;
   std::string name_;
-  std::vector<t_type*>* tmpl_inst_type_;
 
 };
 
