@@ -86,7 +86,11 @@ public:
 
   virtual std::vector<std::string>* get_template_decl_type() const { return tmpl_decl_type_; }
 
-  virtual std::map<std::string, t_type*>* map_template_types() {
+  bool is_generic_type() const {
+    return (tmpl_decl_type_ != nullptr) && (tmpl_decl_type_->size() > 0);
+  }
+
+  virtual std::map<std::string, mapped_type>* map_template_types() {
     // generic?
     if (tmpl_decl_type_ == nullptr) {
       return nullptr;
@@ -101,7 +105,7 @@ public:
     if (tmpl_decl_type_->size() != tmpl_mapped_decls_.size()) {
       int expected_count = 0;
       for( std::vector<std::string>::iterator itKey = tmpl_decl_type_->begin(); tmpl_decl_type_->end() != itKey; ++itKey) {
-        tmpl_mapped_decls_[*itKey] = nullptr; // no type yet, just generic
+        tmpl_mapped_decls_[*itKey] = mapped_type(*itKey, true); // no type yet, just generic
         if (++expected_count != tmpl_mapped_decls_.size()) {
           printf("Duplicate type parameter %s at %s\n", itKey->c_str(), name_.c_str());
           exit(1);
@@ -194,7 +198,7 @@ private:
   bool xcepts_validated_;
   int members_with_value_;
   std::vector<std::string>* tmpl_decl_type_;
-  std::map<std::string, t_type*> tmpl_mapped_decls_;
+  std::map<std::string, mapped_type> tmpl_mapped_decls_;
 
   bool xsd_all_;
 

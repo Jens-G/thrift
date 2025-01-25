@@ -368,7 +368,7 @@ public:
     }
 
     t_typedef* instance = new t_typedef(this, symbolic, tmpl_type);
-    scope()->add_type( instance->get_symbolic(), instance);
+    scope()->add_type(instance->get_symbolic(), instance);
     return instance;
   }
 
