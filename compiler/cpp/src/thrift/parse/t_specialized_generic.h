@@ -34,15 +34,27 @@ class t_program;
 */
 
 /**
- * A struct is a container for a set of member fields that has a name. Structs
- * are also used to implement exception types.
- *
+ * A (partially or fully) specialized generic type
  */
-class t_generic_struct : public t_struct {
+class t_specialized_generic : public t_type {
 public:
-  t_generic_struct(t_struct* declaration, const std::string& name, std::vector<t_type*>* instantiation)
-    : t_struct(declaration->get_program(), declaration->get_name()), 
-	  tmpl_inst_type_(instantiation)  {}
+  t_specialized_generic(t_struct* declaration, std::vector<t_type*>* instantiation)
+    : t_type(declaration->get_program(), declaration->get_name()),
+      generic_declaration_(declaration),
+      partially_specialized_(nullptr),
+      tmpl_inst_type_(instantiation) {}
+
+  t_specialized_generic(t_specialized_generic* partial, std::vector<t_type*>* instantiation)
+    : t_type(partial->get_program(), partial->get_name()),
+      generic_declaration_(nullptr),
+      partially_specialized_(partial),
+      tmpl_inst_type_(instantiation) {}
+
+  virtual bool is_specialized_generic() const { return true; }
+
+  // we can be a lot actually
+  virtual bool is_struct() const { return get_underlying_type()->is_struct(); }
+  virtual bool is_xception() const { return get_underlying_type()->is_xception(); }
 
   /*
   mapped_type get_generic_type(std::map<std::string, mapped_type>* generic = nullptr);
@@ -103,8 +115,21 @@ public:
   virtual std::vector<t_type*>* get_template_instance_type() const { return tmpl_inst_type_; }
 
 private:
-  std::vector<t_type*>* tmpl_inst_type_;
-  std::map<std::string, mapped_type> tmpl_mapped_generic_types_;
+  t_struct* generic_declaration_;  // original generic type decl (maybe null)
+  t_specialized_generic* partially_specialized_;  // partial specialisation this one is based upon (maybe null)
+  std::vector<t_type*>* tmpl_inst_type_;  // types applied during specialization 
+  std::map<std::string, mapped_type> tmpl_mapped_generic_types_;  // cached mapping
+
+  t_type* get_underlying_type() const {
+    if (partially_specialized_ != nullptr) {
+      return partially_specialized_;
+    }
+    if (generic_declaration_ != nullptr) {
+      return generic_declaration_;
+    }
+    printf("Unexpected state at generic type %s\n", name_.c_str());
+    exit(1);
+  }
 
   void validate_template_instantiation(const std::vector<std::string>* decls) const {
     std::vector<t_type*>* instance = get_template_instance_type();
