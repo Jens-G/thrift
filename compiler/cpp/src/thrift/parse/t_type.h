@@ -88,6 +88,7 @@ public:
   virtual bool is_set() const { return false; }
   virtual bool is_map() const { return false; }
   virtual bool is_service() const { return false; }
+  virtual bool is_specialized_generic() const { return false; }
 
   t_program* get_program() { return program_; }
 
