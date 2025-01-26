@@ -22,28 +22,23 @@
 #include "thrift/parse/t_program.h"
 
 t_type* t_typedef::get_type(std::map<std::string, mapped_type>* generic) {
-  mapped_type mapped = get_generic_type(generic);
-  return mapped.get_type();
+  return const_cast<t_type*>(const_cast<const t_typedef*>(this)->get_type(generic));
 }
 
-mapped_type t_typedef::get_generic_type(std::map<std::string, mapped_type>* generic) {
-  return const_cast<const t_typedef*>(this)->get_generic_type(generic);
-}
-
-const mapped_type t_typedef::get_generic_type(std::map<std::string, mapped_type>* generic) const {
+const t_type* t_typedef::get_type(std::map<std::string, mapped_type>* generic) const {
   if (type_ != nullptr) {
-    return mapped_type(symbolic_, type_);
+    return type_;
   }
 
   const t_type* type = get_program()->scope()->get_type(symbolic_);
   if ((type != nullptr) && (type != this)) {
-    return mapped_type(symbolic_, type);
+    return type;
   }
 
   if (generic != nullptr) {
     std::map<std::string, mapped_type>::const_iterator iter = generic->find(symbolic_);
     if ((iter != generic->end()) && (iter->second.get_type() != this)) {
-      return iter->second;
+      return iter->second.get_type();
     }
   }
 
