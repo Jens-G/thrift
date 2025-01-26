@@ -211,8 +211,8 @@ private:
   bool union_validated_;
   bool xcepts_validated_;
   int members_with_value_;
-  std::vector<std::string>* tmpl_decl_type_;
-  std::map<std::string, mapped_type> tmpl_mapped_decls_;
+  std::vector<std::string>* tmpl_decl_type_;  // generic type placeholders
+  std::map<std::string, mapped_type> tmpl_mapped_decls_; // cached mapping
 
   bool xsd_all_;
 
