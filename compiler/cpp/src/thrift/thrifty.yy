@@ -1212,7 +1212,7 @@ FieldType:
         }
 
         // generics instantiation
-        t_type* instance = g_program->instantiate_template_type($1, $2);
+        t_type* instance = g_program->instantiate_template_type($$, $2);
         if( instance != nullptr) {
             $$ = instance;
         }
