@@ -34,6 +34,7 @@
 #include "thrift/parse/t_enum.h"
 #include "thrift/parse/t_const.h"
 #include "thrift/parse/t_struct.h"
+#include "thrift/parse/t_generic_struct.h"
 #include "thrift/parse/t_service.h"
 #include "thrift/parse/t_list.h"
 #include "thrift/parse/t_map.h"
@@ -362,14 +363,20 @@ public:
 
   bool get_recursive() const { return recursive_; }
 
-  virtual t_typedef* instantiate_template_type(std::string symbolic, std::vector<t_type*>* tmpl_type) {
+  virtual t_generic_struct* instantiate_template_type(t_type* type, std::vector<t_type*>* tmpl_type) {
     if ((tmpl_type == nullptr) || (tmpl_type->size() == 0)) {
       return nullptr;
     }
 
-    t_typedef* instance = new t_typedef(this, symbolic, tmpl_type);
-    scope()->add_type(instance->get_symbolic(), instance);
-    return instance;
+    if (type->is_struct() || type->is_xception()) {
+      t_struct* declaration = (t_struct*)type;
+      t_generic_struct* instance = new t_generic_struct(declaration, type->get_name(), tmpl_type);
+      scope()->add_type(instance->get_symbolic(), instance);
+      return instance;
+    }
+
+    pwarning(0, "Unable to create generic type instance from %s: struct, union or exception expected", type->get_name());
+    return nullptr;
   }
 
 private:

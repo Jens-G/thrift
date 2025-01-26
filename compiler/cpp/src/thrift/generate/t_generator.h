@@ -164,14 +164,6 @@ protected:
     generate_struct(txception);
   }
 
-  // generics support
-  virtual void generate_generic_forward_declaration(t_typedef* ttypedef) {}
-  virtual void generate_generic_instance(t_typedef* ttypedef) {
-    pwarning(0, "%s: Generic type generation not implemented: %s\n",
-             this->display_name().c_str(),
-             ttypedef->get_name().c_str());
-  }
-
   /**
    * Method to get the program name, may be overridden
    */
