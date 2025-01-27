@@ -58,8 +58,10 @@ public:
   ~t_typedef() override = default;
 
   t_type* get_type(std::map<std::string, mapped_type>* generic = nullptr);
-
   const t_type* get_type(std::map<std::string, mapped_type>* generic = nullptr) const;
+
+  const mapped_type* t_typedef::get_generic_type(std::map<std::string, mapped_type>* generic) const;
+
   const std::string get_symbolic() const {return symbolic_; }
 
 
