@@ -50,17 +50,13 @@ void t_generator::generate_program() {
 
   vector<t_struct*>::iterator o_iter;
   for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
-    if ((*o_iter)->is_fully_specialized_type()) {
-      generate_forward_declaration(*o_iter);
-    }
+    generate_forward_declaration(*o_iter);
   }
   for (o_iter = objects.begin(); o_iter != objects.end(); ++o_iter) {
-    if ((*o_iter)->is_fully_specialized_type()) {
-      if ((*o_iter)->is_xception()) {
-        generate_xception(*o_iter);
-      } else {
-        generate_struct(*o_iter);
-      }
+    if ((*o_iter)->is_xception()) {
+      generate_xception(*o_iter);
+    } else {
+      generate_struct(*o_iter);
     }
   }
 

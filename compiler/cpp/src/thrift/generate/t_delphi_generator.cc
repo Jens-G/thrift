@@ -3076,10 +3076,13 @@ string t_delphi_generator::type_name(t_type* ttype,
   if (ttype->is_typedef()) {
     t_typedef* tdef = (t_typedef*)ttype;
     if (tdef->is_forward_typedef()) { // forward types according to THRIFT-2421
-      t_type* resolved = tdef->get_type(generic);
-      if (resolved != nullptr) {
-        return type_name(resolved, b_cls, b_no_postfix, generic);
-      } else {
+      const mapped_type* resolved = tdef->get_generic_type(generic);
+      if (resolved->get_type() != nullptr) {
+        return type_name(resolved->get_type(), b_cls, b_no_postfix, generic);
+      } else if(resolved->is_generic_decl()) {
+        return std::string("<" + normalize_name(resolved->symbolic()) + ">");
+      }
+      else {
         throw "Unresolved forward declaration: Used type never defined: " + tdef->get_symbolic();
       }
     } else {
