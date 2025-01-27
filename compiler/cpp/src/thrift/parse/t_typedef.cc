@@ -31,6 +31,10 @@ const t_type* t_typedef::get_type(std::map<std::string, mapped_type>* generic) c
     return mapped->get_type();
   }
 
+  if (is_declaration()) {
+    return this;  // generic type declaration is fully specialized at usage, not declaration
+  }
+
   printf("Type \"%s\" not defined\n", symbolic_.c_str());
   exit(1);
 }
@@ -52,6 +56,6 @@ const mapped_type* t_typedef::get_generic_type(std::map<std::string, mapped_type
     }
   }
 
-  return new mapped_type(symbolic_, false);
+  return new mapped_type(symbolic_, is_declaration());
 }
 

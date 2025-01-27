@@ -2637,7 +2637,8 @@ void t_delphi_generator::generate_deserialize_field(ostream& out,
                                                     string prefix,
                                                     ostream& local_vars,
                                                     std::map<std::string, mapped_type>* generic) {
-  t_type* type = tfield->get_type()->get_true_type(generic);
+  const mapped_type* mapped = tfield->get_type()->try_get_true_type(generic);
+  t_type* type = mapped->get_type() != nullptr ? mapped->get_type() : tfield->get_type();
 
   if (type->is_void()) {
     throw "CANNOT GENERATE DESERIALIZE CODE FOR void TYPE: " + prefix + tfield->get_name();
@@ -3081,8 +3082,7 @@ string t_delphi_generator::type_name(t_type* ttype,
         return type_name(resolved->get_type(), b_cls, b_no_postfix, generic);
       } else if(resolved->is_generic_decl()) {
         return std::string("<" + normalize_name(resolved->symbolic()) + ">");
-      }
-      else {
+      } else {
         throw "Unresolved forward declaration: Used type never defined: " + tdef->get_symbolic();
       }
     } else {
