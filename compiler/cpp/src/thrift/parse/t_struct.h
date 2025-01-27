@@ -90,20 +90,6 @@ public:
     return (tmpl_decl_type_ != nullptr) && (tmpl_decl_type_->size() > 0);
   }
 
-  bool is_fully_specialized_type() const {
-    if (is_generic_type()) {
-      members_type::const_iterator m_iter;
-      for (m_iter = members_.begin(); m_iter != members_.end(); ++m_iter) {
-        t_type* ftyp = (*m_iter)->get_type();
-        if( (ftyp == nullptr) || (ftyp->get_true_type() == nullptr)) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
   virtual std::map<std::string, mapped_type>* map_template_types() {
     // generic?
     if (tmpl_decl_type_ == nullptr) {
