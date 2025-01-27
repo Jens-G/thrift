@@ -90,12 +90,18 @@ public:
   virtual bool is_service() const { return false; }
   virtual bool is_specialized_generic() const { return false; }
 
+  virtual void mark_as_declaration() {};
+
   t_program* get_program() { return program_; }
 
   const t_program* get_program() const { return program_; }
 
   t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr);
   const t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr) const;
+
+  mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic);
+  const mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic) const;
+
 
   // This function will break (maybe badly) unless 0 <= num <= 16.
   static char nybble_to_xdigit(int num) {

@@ -45,7 +45,10 @@ class t_scope {
 public:
   t_scope() = default;
 
-  void add_type(std::string name, t_type* type) { types_[name] = type; }
+  void add_type(std::string name, t_type* type) {
+    types_[name] = type;
+    type->mark_as_declaration();
+  }
 
   t_type* get_type(std::string name) { return types_[name]; }
 

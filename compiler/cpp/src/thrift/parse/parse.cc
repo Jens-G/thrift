@@ -28,8 +28,24 @@ t_type* t_type::get_true_type(std::map<std::string, mapped_type>* generic) {
 
 const t_type* t_type::get_true_type(std::map<std::string, mapped_type>* generic) const {
   const t_type* type = this;
-  while (type->is_typedef()) {
+  const t_type* prev = nullptr;
+  while (type->is_typedef() && (prev != type)) {
+    prev = type;
     type = ((t_typedef*)type)->get_type(generic);
   }
   return type;
+}
+
+mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic) {
+  return const_cast<mapped_type*>(const_cast<const t_type*>(this)->try_get_true_type(generic));
+}
+
+const mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic) const {
+  const mapped_type* mapped = new mapped_type(get_name(), this);
+  const t_type* type = mapped->get_type();
+  while ((type != nullptr) && type->is_typedef()) {
+    mapped = ((t_typedef*)type)->get_generic_type(generic);
+    type = type = mapped->get_type();
+  }
+  return mapped;
 }
