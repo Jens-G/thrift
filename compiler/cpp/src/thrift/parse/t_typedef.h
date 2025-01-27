@@ -64,15 +64,18 @@ public:
 
   const std::string get_symbolic() const {return symbolic_; }
 
-
   bool is_forward_typedef() const { return forward_; }
 
   bool is_typedef() const override { return true; }
+
+  bool is_declaration() const { return is_type_decl_; }
+  virtual void mark_as_declaration() { is_type_decl_ = true; };
 
 private:
   t_type* type_;
   std::string symbolic_;
   bool forward_;
+  bool is_type_decl_;  // true for declarations, e.g. type of a (possibly generic) struct field, false for usage helpers
 
 };
 
