@@ -22,6 +22,7 @@
 
 #include "thrift/parse/t_doc.h"
 #include <cstring>
+#include <cassert>
 #include <map>
 #include <stdint.h>
 #include <string>
@@ -97,7 +98,7 @@ public:
   const t_program* get_program() const { return program_; }
 
   t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr);
-  const t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr) const;
+  virtual const t_type* get_true_type(std::map<std::string, mapped_type>* generic = nullptr) const;
 
   mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic);
   const mapped_type* t_type::try_get_true_type(std::map<std::string, mapped_type>* generic) const;
@@ -124,6 +125,9 @@ public:
   virtual std::vector<std::string>* get_template_decl_type() const { return nullptr; }
   virtual std::vector<t_type*>* get_template_instance_type() const { return nullptr; }
   virtual std::map<std::string, mapped_type>* map_template_types() { return nullptr; }
+  virtual void apply_template_specialization( std::map<std::string, mapped_type>* mapped_types) {
+    assert(false);  // impl missing?
+  }
 
 protected:
   t_type()
