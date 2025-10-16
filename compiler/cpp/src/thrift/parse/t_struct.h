@@ -87,6 +87,8 @@ public:
   virtual std::vector<std::string>* get_template_decl_type() const { return tmpl_decl_type_; }
 
   virtual void mark_as_declaration() {
+    t_type::mark_as_declaration();
+
     members_type::const_iterator m_iter;
     for (m_iter = members_.begin(); m_iter != members_.end(); ++m_iter) {
       (*m_iter)->get_type()->mark_as_declaration();

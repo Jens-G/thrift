@@ -36,6 +36,7 @@ public:
     : t_type(program, symbolic),
       type_(type),
       symbolic_(symbolic),
+      is_type_decl_(false),
       forward_(false) {}
 
   /**
@@ -47,12 +48,14 @@ public:
     : t_type(program, symbolic),
       type_(nullptr),
       symbolic_(symbolic),
+      is_type_decl_(false),
       forward_(forward) {}
 
   t_typedef(t_program* program, const std::string& symbolic, std::vector<t_type*>* tmpl_type)
     : t_type(program, symbolic),
       type_(nullptr),
       symbolic_(symbolic),
+      is_type_decl_(false),
       forward_(true) {}
 
   ~t_typedef() override = default;
@@ -69,7 +72,10 @@ public:
   bool is_typedef() const override { return true; }
 
   bool is_declaration() const { return is_type_decl_; }
-  virtual void mark_as_declaration() { is_type_decl_ = true; };
+  virtual void mark_as_declaration() {
+    t_type::mark_as_declaration();
+    is_type_decl_ = true;
+  };
 
 private:
   t_type* type_;

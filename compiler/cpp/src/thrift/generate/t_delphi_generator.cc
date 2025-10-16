@@ -2700,6 +2700,9 @@ void t_delphi_generator::generate_deserialize_field(ostream& out,
       out << ");";
     }
     out << '\n';
+  } else if (type->is_typedef()) {
+    auto* tdef = (t_typedef*)type;
+    out << "Read<" << tdef->get_symbolic().c_str() << ">()";
   } else {
     printf("DO NOT KNOW HOW TO DESERIALIZE FIELD '%s' TYPE '%s'\n",
            tfield->get_name().c_str(),
