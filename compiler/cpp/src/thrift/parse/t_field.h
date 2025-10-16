@@ -112,6 +112,16 @@ public:
 
   void set_reference(bool reference) { reference_ = reference; }
 
+  void apply_template_specialization(std::map<std::string, mapped_type>* mapped_types) {
+    auto mapping = mapped_types->find(get_type()->get_name());
+    if (mapping != mapped_types->end()) {
+      assert(!mapping->second.is_generic_decl());
+      type_ = mapping->second.get_type();
+      assert(type_ != nullptr);
+    }
+  }
+
+
 private:
   t_type* type_;
   std::string name_;

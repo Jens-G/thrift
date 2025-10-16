@@ -64,6 +64,9 @@
     <ClInclude Include="src\parse\t_struct.h">
       <Filter>parse</Filter>
     </ClInclude>
+	<ClInclude Include="src\parse\t_specialized_generic.h">
+      <Filter>parse</Filter>
+    </ClInclude>
     <ClInclude Include="src\parse\t_type.h">
       <Filter>parse</Filter>
     </ClInclude>
