@@ -23,6 +23,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <cassert>
 
 #include "thrift/parse/t_type.h"
 #include "thrift/parse/t_typedef.h"
@@ -33,6 +34,7 @@
 #include "thrift/parse/t_map.h"
 #include "thrift/parse/t_list.h"
 #include "thrift/parse/t_set.h"
+#include "thrift/parse/t_specialized_generic.h"
 
 /**
  * This represents a variable scope used for looking up predefined types and
@@ -110,9 +112,7 @@ public:
   }
 
   void resolve_const_value(t_const_value* const_val, t_type* ttype) {
-    while (ttype->is_typedef()) {
-      ttype = ((t_typedef*)ttype)->get_type();
-    }
+    ttype = ttype->get_true_type();
 
     if (ttype->is_map()) {
       const std::map<t_const_value*, t_const_value*, t_const_value::value_compare>& map = const_val->get_map();
@@ -209,7 +209,11 @@ public:
       }
       const_val->set_identifier(tenum->get_name() + "." + enum_value->get_name());
       const_val->set_enum(tenum);
-    }
+    } else if (ttype->is_specialized_generic()) {
+      auto* tspecialized = (t_specialized_generic*)ttype;
+      auto* tfinal = tspecialized->construct_final_type();
+      resolve_const_value(const_val, tfinal);
+    } 
   }
 
 
