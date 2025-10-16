@@ -123,6 +123,15 @@ public:
     return &tmpl_mapped_decls_;
   }
 
+  virtual void apply_template_specialization(std::map<std::string, mapped_type>* mapped_types) {
+    std::vector<t_field*>::const_iterator it;
+    std::vector<t_field*> list = get_members();
+    for (it = list.begin(); it != list.end(); ++it) {
+      (*it)->apply_template_specialization(mapped_types);
+    }      
+  }
+
+
   void set_xsd_all(bool xsd_all) { xsd_all_ = xsd_all; }
   bool get_xsd_all() const { return xsd_all_; }
 
