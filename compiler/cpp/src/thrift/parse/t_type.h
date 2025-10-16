@@ -123,7 +123,6 @@ public:
   std::map<std::string, std::vector<std::string>> annotations_;
 
   virtual std::vector<std::string>* get_template_decl_type() const { return nullptr; }
-  virtual std::vector<t_type*>* get_template_instance_type() const { return nullptr; }
   virtual std::map<std::string, mapped_type>* map_template_types() { return nullptr; }
   virtual void apply_template_specialization( std::map<std::string, mapped_type>* mapped_types) {
     assert(false);  // impl missing?
