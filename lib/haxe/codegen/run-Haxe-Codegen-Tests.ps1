@@ -32,8 +32,6 @@ $FAIL_HAXE = @(
 
 # unexpected but known bugs (TODO: fix them)
 $KNOWN_BUGS = @(
-    "JavaDeepCopyTest.thrift",   # struct Map has map<double,...> field -> ObjectMap<Float,...> fails Haxe K:{} constraint
-    "JavaTypes.thrift"           # struct Map has map<double,...> field -> ObjectMap<Float,...> fails Haxe K:{} constraint
     )
 
 
