@@ -22,8 +22,11 @@
 # expected to fail at Thrift Compiler
 $FAIL_THRIFT = @(
 	"BrokenConstants.thrift",        # intended to break
+	"Buses.thrift",                  # subdir includes don't work here
 	"DuplicateImportsTest.thrift",   # subdir includes don't work here
-	"Include.thrift")   # subdir includes don't work here
+	"Include.thrift",                # subdir includes don't work here
+	"MaintenanceFacility.thrift",    # subdir includes don't work here
+	"Transporters.thrift")           # subdir includes don't work here
 
 # expected to fail at net Compiler
 $FAIL_DOTNET = @(
@@ -31,15 +34,7 @@ $FAIL_DOTNET = @(
 
 # unexpected but known bugs (TODO: fix them)
 $KNOWN_BUGS = @(
-	"Base_One.thrift",
-	"Buses.thrift",
-	"Constants.thrift",
-	"ConstantsDemo.thrift",
-	"JavaDeepCopyTest.thrift",
-	"MaintenanceFacility.thrift",
-	"Midlayer.thrift",
-	"Transporters.thrift",
-	"Ultimate.thrift"
+	"Constants.thrift"               # user-specific file, not in the Thrift tree
     )
 
 $NET_VERSIONS = @(
@@ -63,8 +58,13 @@ function FindThriftExe() {
 
 	# if we have a freshly compiled one it might be a better choice
 	@("Release","Debug") | foreach{
-		if( test-path "$ROOTDIR\compiler\cpp\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\$exe" }
-		if( test-path "$ROOTDIR\compiler\cpp\compiler\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\compiler\$exe" }
+		if( test-path ([System.IO.Path]::Combine($ROOTDIR,"compiler","cpp",$_,$exe))) { $exe = [System.IO.Path]::Combine($ROOTDIR,"compiler","cpp",$_,$exe) }
+		if( test-path ([System.IO.Path]::Combine($ROOTDIR,"compiler","cpp","compiler",$_,$exe))) { $exe = [System.IO.Path]::Combine($ROOTDIR,"compiler","cpp",$_,"compiler",$exe) }
+	}
+	# cmake build outputs take highest priority (Linux/macOS and cmake on Windows)
+	@("cmake_build","cmake_build_compiler") | foreach{
+		$candidate = [System.IO.Path]::Combine($ROOTDIR, $_, "compiler", "cpp", "bin", $exe)
+		if( test-path $candidate) { $exe = $candidate }
 	}
 
 	return $exe
@@ -110,7 +110,7 @@ function CopyFilesFrom([string] $source, $text) {
 		gci *.thrift -file | foreach {
 			#write-host $_
 			$name = $_.name
-			copy-item $_ "$TARGET\$name"
+			copy-item $_ ([System.IO.Path]::Combine($TARGET, $name))
 			$counter++
 		}
 		popd
@@ -135,16 +135,19 @@ function TestIdlFile([string] $idl) {
 
 	# compile IDL
 	#write-host -nonewline " $idl"
-	InitializeFolder  "$TARGET\gen-netstd"    "*.cs"
-	&$THRIFT_EXE $VERBOSE -r --gen "netstd:$net_version" $idl | out-file "$TARGET\thrift.log"
+	$gendir      = [System.IO.Path]::Combine($TARGET, "gen-netstd")
+	$thrift_csproj = [System.IO.Path]::Combine($ROOTDIR, "lib", "netstd", "Thrift", "Thrift.csproj")
+	InitializeFolder  $gendir    "*.cs"
+	&$THRIFT_EXE $VERBOSE -r --gen "netstd:$net_version" $idl | out-file ([System.IO.Path]::Combine($TARGET, "thrift.log"))
 	if( -not $?) {
-		get-content "$TARGET\thrift.log" | out-default
+		get-content ([System.IO.Path]::Combine($TARGET, "thrift.log")) | out-default
 		write-host -foregroundcolor red "Thrift compilation failed: $idl"
 		return $false
 	}
 
 	# generate solution
-	if( -not (test-path "$TARGET\gen-netstd\$TESTAPP.sln")) {
+	$slnfile = [System.IO.Path]::Combine($gendir, "$TESTAPP.sln")
+	if( -not (test-path $slnfile)) {
 		$lines = @()
 		$lines += ""
 		$lines += "Microsoft Visual Studio Solution File, Format Version 12.00"
@@ -153,7 +156,7 @@ function TestIdlFile([string] $idl) {
 		$lines += "MinimumVisualStudioVersion = 10.0.40219.1"
 		$lines += "Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"TestProject`", `"TestProject.csproj`", `"{9501AFB9-21F2-4DBC-8775-1A98DDDE3D46}`""
 		$lines += "EndProject"
-		$lines += "Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"Thrift`", `"$ROOTDIR\lib\netstd\Thrift\Thrift.csproj`", `"{B0B34555-6212-4405-8B8A-DFA9899D827A}`""
+		$lines += "Project(`"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}`") = `"Thrift`", `"$thrift_csproj`", `"{B0B34555-6212-4405-8B8A-DFA9899D827A}`""
 		$lines += "EndProject"
 		$lines += "Global"
 		$lines += "    GlobalSection(SolutionConfigurationPlatforms) = preSolution"
@@ -177,7 +180,7 @@ function TestIdlFile([string] $idl) {
 		$lines += "        SolutionGuid = {074CCCDB-A5DB-4CBF-AC18-10F9B373126A}"
 		$lines += "   EndGlobalSection"
 		$lines += "EndGlobal"
-		$lines | set-content "$TARGET\gen-netstd\$TESTAPP.sln"
+		$lines | set-content $slnfile
 	}
 
 	# generate program main - always, because of $net_version
@@ -191,15 +194,16 @@ function TestIdlFile([string] $idl) {
 	$lines += "  </PropertyGroup>"
 	$lines += ""
 	$lines += "  <ItemGroup>"
-	$lines += "    <ProjectReference Include=`"..\..\wc-JensG-haxe\lib\netstd\Thrift\Thrift.csproj`" />"
+	$lines += "    <ProjectReference Include=`"$thrift_csproj`" />"
 	$lines += "  </ItemGroup>"
 	$lines += ""
 	$lines += "</Project>"
 	$lines += ""
-	$lines | set-content "$TARGET\gen-netstd\$TESTAPP.csproj"
+	$lines | set-content ([System.IO.Path]::Combine($gendir, "$TESTAPP.csproj"))
 
 	# generate project file
-	if( -not (test-path "$TARGET\gen-netstd\$TESTAPP.cs")) {
+	$testcs = [System.IO.Path]::Combine($gendir, "$TESTAPP.cs")
+	if( -not (test-path $testcs)) {
 		$lines = @()
 		$lines += "namespace $TESTAPP"
 		$lines += "{"
@@ -211,14 +215,15 @@ function TestIdlFile([string] $idl) {
 		$lines += "        }"
 		$lines += "    }"
 		$lines += "}"
-		$lines | set-content "$TARGET\gen-netstd\$TESTAPP.cs"
+		$lines | set-content $testcs
 	}
 
 	# try to compile the program
 	# this should not throw any errors, warnings or hints
-	$exe = "$TARGET\gen-netstd\bin\Debug\$net_version.0\$TESTAPP" + $EXE_EXT
+	$exe = [System.IO.Path]::Combine($gendir, "bin", "Debug", "$net_version.0", $TESTAPP + $EXE_EXT)
 	if( test-path $exe) { remove-item $exe }
-	&$DOTNET_EXE build "$TARGET\gen-netstd\$TESTAPP.sln"  | out-file "$TARGET\compile.log"
+	$compilelog = [System.IO.Path]::Combine($TARGET, "compile.log")
+	&$DOTNET_EXE build $slnfile  | out-file $compilelog
 	if( -not (test-path $exe)) {
 
 		# expected to fail at Thrift Compiler
@@ -237,16 +242,17 @@ function TestIdlFile([string] $idl) {
 		}
 		if( $filter) { return $true }
 
-		get-content "$TARGET\compile.log" | out-default
+		get-content $compilelog | out-default
 		write-host -foregroundcolor red "C# compilation failed: $idl"
 		return $false
 	}
 
 	# The compiled program is now executed. If it hangs or crashes, we
-	# have a serious problem with the generated code. 
-	&"$exe" | out-file "$TARGET\exec.log"
+	# have a serious problem with the generated code.
+	$execlog = [System.IO.Path]::Combine($TARGET, "exec.log")
+	&"$exe" | out-file $execlog
 	if( -not $?) {
-		get-content "$TARGET\exec.log" | out-default
+		get-content $execlog | out-default
 		write-host -foregroundcolor red "Test execution failed: $idl"
 		return $false
 	}
@@ -260,7 +266,7 @@ $MY_THRIFT_FILES = "..\..\..\..\..\..\other_thrift_files"
 $VERBOSE = ""  # set any Thrift compiler debug/verbose flag you want
 
 # init
-$ROOTDIR = $PSScriptRoot + "\..\..\..\.."
+$ROOTDIR = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..', '..', '..'))
 
 # try to find thrift
 $THRIFT_EXE = FindThriftExe
@@ -280,12 +286,12 @@ if( -not $?) {
 
 
 # some helpers
-$TARGET = "$ROOTDIR\..\thrift-testing"
+$TARGET = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ROOTDIR, '..', 'thrift-testing'))
 $TESTAPP = "TestProject"
 
 # create and/or empty target dirs
-InitializeFolder  "$TARGET"            "*.thrift"
-InitializeFolder  "$TARGET\gen-netstd" "*.cs"
+InitializeFolder  $TARGET                                                    "*.thrift"
+InitializeFolder  ([System.IO.Path]::Combine($TARGET, "gen-netstd"))        "*.cs"
 
 # recurse through thrift WC and "my thrift files" folder
 # copies all .thrift files into thrift-testing
