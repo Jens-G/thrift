@@ -40,20 +40,26 @@ $KNOWN_BUGS = @(
 #	"MaintenanceFacility.thrift",
 #	"Midlayer.thrift",
 #	"Transporters.thrift",
-#	"Ultimate.thrift
+#	"Ultimate.thrift"
     )
+
+
+#---- consts --------------------------------------------
+
+$EXE_EXT = ($OsType -eq "Windows") ? ".exe" : ""
+
 
 #---- functions --------------------------------------------
 
 function FindThriftExe() {
 	# prefer debug over release over path
-	write-host -nonewline Looking for thrift.exe ...
-	$exe = "thrift.exe"
+	$exe = "thrift" + $EXE_EXT
+	write-host -nonewline Looking for $exe ...
 
 	# if we have a freshly compiled one it might be a better choice
 	@("Release","Debug") | foreach{
-		if( test-path "$ROOTDIR\compiler\cpp\$_\thrift.exe") { $exe = "$ROOTDIR\compiler\cpp\$_\thrift.exe" }
-		if( test-path "$ROOTDIR\compiler\cpp\compiler\$_\thrift.exe") { $exe = "$ROOTDIR\compiler\cpp\$_\compiler\thrift.exe" }
+		if( test-path "$ROOTDIR\compiler\cpp\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\$exe" }
+		if( test-path "$ROOTDIR\compiler\cpp\compiler\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\compiler\$exe" }
 	}
 
 	return $exe
@@ -62,10 +68,10 @@ function FindThriftExe() {
 
 function FindHaxe() {
 	# prefer debug over release over path
-	write-host -nonewline Looking for haxe.exe ...
-	$exe = "haxe.exe"
+	$exe = "haxe" + $EXE_EXT
+	write-host -nonewline Looking for $exe ...
 
-	# TODO: add arbitraily complex code to locate a suitable HAXE.exe if it is not in the path
+	# TODO: add arbitraily complex code to locate a suitable haxe version if it is not in the path
 
 	return $exe
 }
@@ -84,24 +90,31 @@ function InitializeFolder([string] $folder, [string] $pattern) {
 
 function CopyFilesFrom([string] $source, $text) {
 	#write-host "$source"
+	$counter = 0
 	if( ($source -ne "") -and (test-path $source)) {
 		if( $text -ne $null) {
-			write-host -foregroundcolor yellow Copying $text ...
+			write-host -nonewline -foregroundcolor yellow Copying $text ...
 		}
 
 		pushd $source
 		# recurse dirs
 		gci . -directory | foreach {
-			CopyFilesFrom "$_"
+			$counter += CopyFilesFrom "$_"
 		}
 		# files within
 		gci *.thrift -file | foreach {
 			#write-host $_
 			$name = $_.name
 			copy-item $_ "$TARGET\$name"
+			$counter++
 		}
 		popd
+
+		if( $text -ne $null) {
+			write-host -foregroundcolor yellow $counter files
+		}
 	}
+	return $counter
 }
 
 function CollectImports([string] $folder) {
@@ -230,19 +243,19 @@ $VERBOSE = ""  # set any Thrift compiler debug/verbose flag you want
 # init
 $ROOTDIR = $PSScriptRoot + "\..\..\.."
 
-# try to find thrift.exe
+# try to find thrift
 $THRIFT_EXE = FindThriftExe
 &$THRIFT_EXE -version
 if( -not $?) {
-	write-host -foregroundcolor red Missing thrift.exe
+	write-host -foregroundcolor red ("Missing thrift" + $EXE_EXT)
 	exit 1
 }
 
-# try to find haxe.exe
+# try to find haxe
 $HAXE_EXE = FindHaxe
 &$HAXE_EXE --version
 if( -not $?) {
-	write-host -foregroundcolor red Missing haxe.exe
+	write-host -foregroundcolor red ("Missing haxe" + $EXE_EXT)
 	exit 1
 }
 
@@ -257,8 +270,8 @@ InitializeFolder  "$TARGET\haxe"   "*.*"
 
 # recurse through thrift WC and "my thrift files" folder
 # copies all .thrift files into thrift-testing
-CopyFilesFrom "$ROOTDIR"            "Thrift IDL files"
-CopyFilesFrom "$MY_THRIFT_FILES"    "Custom IDL files"
+CopyFilesFrom "$ROOTDIR"            "Thrift IDL files" | out-null
+CopyFilesFrom "$MY_THRIFT_FILES"    "Custom IDL files" | out-null
 
 # codegen and compile all thrift files, one by one to prevent side effects
 $count = 0

@@ -1,6 +1,6 @@
 Prerequisites
 ----------------------------------------------
-- a suitable dcc32.exe must be reachable via normal search path
+- a suitable haxe executable must be reachable via normal search path
 - the Thrift compiler thrift.exe is searched in this order
   - under the `compiler` subdir, where debug is preferred over release
   - otherwise via normal search path
