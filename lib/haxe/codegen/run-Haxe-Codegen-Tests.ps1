@@ -32,15 +32,9 @@ $FAIL_HAXE = @(
 
 # unexpected but known bugs (TODO: fix them)
 $KNOWN_BUGS = @(
-#	"Base_One.thrift",
-#	"Buses.thrift",
-#	"Constants.thrift",
-#	"ConstantsDemo.thrift",
-#	"JavaDeepCopyTest.thrift",
-#	"MaintenanceFacility.thrift",
-#	"Midlayer.thrift",
-#	"Transporters.thrift",
-#	"Ultimate.thrift"
+    "JavaDeepCopyTest.thrift",   # struct String shadows Haxe built-in; ObjectMap<Float> key constraint
+    "JavaTypes.thrift",          # struct String shadows Haxe built-in; ObjectMap<Float> key constraint
+    "Thrift5320.thrift"          # THRIFT-5320: same-named types across packages cause import ambiguity
     )
 
 
@@ -60,6 +54,11 @@ function FindThriftExe() {
 	@("Release","Debug") | foreach{
 		if( test-path "$ROOTDIR\compiler\cpp\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\$exe" }
 		if( test-path "$ROOTDIR\compiler\cpp\compiler\$_\$exe") { $exe = "$ROOTDIR\compiler\cpp\$_\compiler\$exe" }
+	}
+	# cmake build outputs take highest priority (Linux/macOS and cmake on Windows)
+	@("cmake_build","cmake_build_compiler") | foreach{
+		$candidate = [System.IO.Path]::Combine($ROOTDIR, $_, "compiler", "cpp", "bin", $exe)
+		if( test-path $candidate) { $exe = $candidate }
 	}
 
 	return $exe
@@ -154,13 +153,13 @@ function TestIdlFile([string] $idl) {
 	if( $filter) { return $true }
 
 	# compile IDL
-	$genhaxe = "$TARGET\haxe\src\gen-haxe"
+	$genhaxe = [System.IO.Path]::Combine($TARGET, "haxe", "gen-haxe")
 	InitializeFolder  "$TARGET\haxe\src"  "*.*"
 	InitializeFolder  $genhaxe            "*.hx"
 	gci "$genhaxe\*" | foreach{ remove-item $_ -recurse }
 	&$THRIFT_EXE $VERBOSE -r --gen "haxe" --out $genhaxe  "$idl" | out-file "$TARGET\haxe\thrift.log"
 	if( -not $?) {
-		get-content "$TARGET\thrift.log" | out-default
+		get-content "$TARGET\haxe\thrift.log" | out-default
 		write-host -foregroundcolor red "Thrift compilation failed: $idl"
 		return $false
 	}
@@ -182,7 +181,7 @@ function TestIdlFile([string] $idl) {
 
 	# generate program main
 	$testapp = "$TARGET\haxe\src\Main.hx"
-	if( -not (test-path testapp)) {
+	if( -not (test-path $testapp)) {
 		$lines = @()
 		$lines += "package;"
 		$lines += ""
@@ -207,7 +206,7 @@ function TestIdlFile([string] $idl) {
 	$exe = "$TARGET\haxe\bin\html5\*.js"
 	$log = "$TARGET\haxe\compile.log"
 	if( test-path $exe) { remove-item $exe }
-	&$HAXE_EXE --cwd "$TARGET\haxe"  "html5.hxml"  2> "$log"
+	&$HAXE_EXE --cwd ([System.IO.Path]::Combine($TARGET, "haxe"))  "html5.hxml"  2> "$log"
 	if( -not (test-path $exe)) {
 
 		# expected to fail at Thrift Compiler
@@ -241,7 +240,7 @@ $MY_THRIFT_FILES = "..\..\..\..\..\other_thrift_files"
 $VERBOSE = ""  # set any Thrift compiler debug/verbose flag you want
 
 # init
-$ROOTDIR = $PSScriptRoot + "\..\..\.."
+$ROOTDIR = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..', '..'))
 
 # try to find thrift
 $THRIFT_EXE = FindThriftExe
@@ -261,7 +260,7 @@ if( -not $?) {
 
 
 # some helpers
-$TARGET = "$ROOTDIR\..\thrift-testing"
+$TARGET = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($ROOTDIR, '..', 'thrift-testing'))
 $TESTAPP = "CodegenTest"
 
 # create and/or empty target dirs
