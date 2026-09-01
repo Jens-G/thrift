@@ -20,10 +20,15 @@ part of thrift;
 abstract class TProtocol {
   final TTransport transport;
 
+  /// Longest string or binary field this protocol will read. A declared length
+  /// is a number the peer chose, and the buffer for it is allocated before any
+  /// of those bytes have arrived.
+  final int maxStringSize;
+
   int _recursionDepth = 0;
   static const int _defaultRecursionDepth = 64;
 
-  TProtocol(this.transport);
+  TProtocol(this.transport, {this.maxStringSize = defaultMaxStringSize});
 
   void incrementRecursionDepth() {
     if (_recursionDepth >= _defaultRecursionDepth) {
