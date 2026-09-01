@@ -26,7 +26,11 @@ THttpTransport = TTransportBase:new{
   rBuf = '',
   CRLF = '\r\n',
   VERSION = version,
-  isServer = true
+  isServer = true,
+  -- Content-Length is a number the peer chose, and the body read below will
+  -- keep going until it has that many bytes. Held to the same maximum a frame
+  -- is; override per transport.
+  maxBodySize = DEFAULT_MAX_SIZE
 }
 
 function THttpTransport:new(obj)
@@ -102,8 +106,11 @@ function THttpTransport:_readMsg()
 
   local length = tonumber(headers["Content-Length"])
   if length then
+    self:checkDeclaredSize(length, self.maxBodySize)
     length = length - string.len(self.rBuf)
-    self.rBuf = self.rBuf .. self.trans:readAll(length)
+    if length > 0 then
+      self.rBuf = self.rBuf .. self.trans:readAll(length)
+    end
   end
   if self.rBuf == nil then
     self.rBuf = ""

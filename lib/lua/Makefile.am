@@ -75,4 +75,5 @@ EXTRA_DIST = \
 		TSocket.lua \
 		TTransport.lua \
 		test/RecursionDepth.thrift \
-		test/test_recursion_depth.lua
+		test/test_recursion_depth.lua \
+		test/test_frame_and_string_limits.lua
