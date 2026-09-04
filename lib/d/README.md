@@ -47,3 +47,29 @@ Async and SSL
 Using SSL with async is experimental (always has been) and
 the unit test "async_test --ssl" hangs.  Use at your own
 risk.
+
+Breaking Changes
+----------------
+
+### 0.25.0
+
+Two rules that the C++ library already applied now hold for D as well, so a
+certificate D accepted before may be rejected now.
+
+thrift.internal.ssl.authorize() consults the certificate's common name only when
+the certificate carries no DNS subjectAltName extension. Previously the common
+name was consulted whenever no subjectAltName entry had returned ALLOW, so a
+certificate whose subjectAltName named other hosts got a second chance from a
+common name that matched -- TDefaultClientAccessManager.verify returns SKIP for a
+name that does not match, which made "names other hosts" and "names no hosts" the
+same state at the fallthrough. RFC 6125 6.4.4 and RFC 9525 6.3 make the
+subjectAltName the identity once it is present.
+
+matchName(), which backs TDefaultClientAccessManager, no longer honours a
+wildcard outside the leftmost label, per RFC 6125 6.4.3. Patterns such as
+"thrift.*.*", "example.*.com" and "a.ev*.com" used to match and no longer do. A
+wildcard in the leftmost label still covers at most one label, unchanged, so
+"*.apache.org" matches "thrift.apache.org" but not "foo.bar.apache.org".
+
+Certificates affected by either rule need reissuing with the host in their
+subjectAltName, which is what every other TLS client already requires of them.
