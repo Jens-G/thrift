@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(ssl_security_matrix) {
           continue;
         }
 
-#ifdef OPENSSL_NO_SSL3
+#if defined(OPENSSL_NO_SSL3) || OPENSSL_VERSION_NUMBER >= 0x40000000L
         if (si == 2 || ci == 2) {
           // Skip all SSLv3 cases - protocol not supported
           continue;

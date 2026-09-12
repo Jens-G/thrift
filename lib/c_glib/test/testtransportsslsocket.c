@@ -224,10 +224,20 @@ test_ssl_write_invalid_socket(void)
 
 
 
+/* OpenSSL 4.0 returns const pointers from the X509 name accessors. Every
+   function those values are passed to here has taken const since 1.1.0, so the
+   const types are used from there on as well. LibreSSL is excluded because it
+   keeps the pre-1.1.0 signatures. */
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+#  define THRIFT_TEST_X509_CONST const
+#else
+#  define THRIFT_TEST_X509_CONST
+#endif
+
 /**
  * Print the common name of certificate
  */
-unsigned char * get_cn_name(X509_NAME* const name)
+unsigned char * get_cn_name(THRIFT_TEST_X509_CONST X509_NAME* const name)
 {
   int idx = -1;
   unsigned char *utf8 = NULL;
@@ -239,10 +249,10 @@ unsigned char * get_cn_name(X509_NAME* const name)
       idx = X509_NAME_get_index_by_NID(name, NID_commonName, -1);
       if(!(idx > -1))  break; /* failed */
 
-      X509_NAME_ENTRY* entry = X509_NAME_get_entry(name, idx);
+      THRIFT_TEST_X509_CONST X509_NAME_ENTRY* entry = X509_NAME_get_entry(name, idx);
       if(!entry) break; /* failed */
 
-      ASN1_STRING* data = X509_NAME_ENTRY_get_data(entry);
+      THRIFT_TEST_X509_CONST ASN1_STRING* data = X509_NAME_ENTRY_get_data(entry);
       if(!data) break; /* failed */
 
       int length = ASN1_STRING_to_UTF8(&utf8, data);
@@ -377,8 +387,8 @@ gboolean my_access_manager(ThriftTransport * transport, X509 *cert, struct socka
   THRIFT_UNUSED_VAR (sslSocket);
 
   g_info("Processing access to the server");
-  X509_NAME* iname = cert ? X509_get_issuer_name(cert) : NULL;
-  X509_NAME* sname = cert ? X509_get_subject_name(cert) : NULL;
+  THRIFT_TEST_X509_CONST X509_NAME* iname = cert ? X509_get_issuer_name(cert) : NULL;
+  THRIFT_TEST_X509_CONST X509_NAME* sname = cert ? X509_get_subject_name(cert) : NULL;
 
   /* Issuer is the authority we trust that warrants nothing useful */
   const unsigned char * issuer = get_cn_name(iname);
@@ -500,6 +510,69 @@ test_ssl_authorization_manager(void)
 
 
 static void
+test_ssl_context_explicit_protocol_window(void)
+{
+  /* An explicitly requested protocol has to pin the context to exactly that
+     version, the way the per-version TLSv1_x_method() functions it replaces
+     did. Checking the window rather than just "a context came back" is what
+     catches a remapping that silently leaves the floor to the library default.
+
+     SSL_CTX_get_min_proto_version() and SSL_CTX_get_max_proto_version() were
+     added in OpenSSL 1.1.1a. */
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL && !defined(LIBRESSL_VERSION_NUMBER)
+  static const struct {
+    ThriftSSLSocketProtocol protocol;
+    int version;
+  } expectations[] = {
+    { TLSv1_0, TLS1_VERSION },
+    { TLSv1_1, TLS1_1_VERSION },
+    { TLSv1_2, TLS1_2_VERSION },
+    { LATEST,  TLS1_2_VERSION }
+  };
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (expectations); i++) {
+      GError *error = NULL;
+      SSL_CTX *context = thrift_ssl_socket_context_initialize (expectations[i].protocol,
+                                                               &error);
+      g_assert_no_error (error);
+      g_assert (context != NULL);
+      g_assert_cmpint (SSL_CTX_get_min_proto_version (context), ==,
+                       expectations[i].version);
+      g_assert_cmpint (SSL_CTX_get_max_proto_version (context), ==,
+                       expectations[i].version);
+      SSL_CTX_free (context);
+  }
+#endif
+}
+
+static void
+test_ssl_context_unavailable_protocol(void)
+{
+#if defined(OPENSSL_NO_SSL3) || OPENSSL_VERSION_NUMBER >= 0x40000000L
+  /* SSLv3 is not available in this build of the library. That has to be
+     reported rather than quietly satisfied with some other version. */
+  GError *error = NULL;
+  SSL_CTX *context = thrift_ssl_socket_context_initialize (SSLv3, &error);
+
+  g_assert (context == NULL);
+  g_assert (error != NULL);
+  g_clear_error (&error);
+#endif
+
+  /* An out-of-range value is reported the same way. */
+  {
+    GError *error = NULL;
+    SSL_CTX *context = thrift_ssl_socket_context_initialize ((ThriftSSLSocketProtocol) 42,
+                                                             &error);
+
+    g_assert (context == NULL);
+    g_assert (error != NULL);
+    g_clear_error (&error);
+  }
+}
+
+static void
 thrift_socket_server (const int port)
 {
   int bytes = 0;
@@ -547,6 +620,8 @@ main(int argc, char *argv[])
   g_test_add_func ("/testtransportsslsocket/CreateAndDestroy", test_ssl_create_and_destroy);
   g_test_add_func ("/testtransportsslsocket/CreateAndSetProperties", test_ssl_create_and_set_properties);
   g_test_add_func ("/testtransportsslsocket/ContextDefaultMinVersion", test_ssl_context_default_min_version);
+  g_test_add_func ("/testtransportsslsocket/ContextExplicitProtocolWindow", test_ssl_context_explicit_protocol_window);
+  g_test_add_func ("/testtransportsslsocket/ContextUnavailableProtocol", test_ssl_context_unavailable_protocol);
   g_test_add_func ("/testtransportsslsocket/OpenAndCloseNonSSLServer", test_ssl_open_and_close_non_ssl_server);
   g_test_add_func ("/testtransportsslsocket/OpenAndWriteInvalidSocket", test_ssl_write_invalid_socket);
 

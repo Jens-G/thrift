@@ -157,8 +157,10 @@ void cleanupOpenSSL() {
 #endif
   EVP_cleanup();
   CRYPTO_cleanup_all_ex_data();
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
-  // Do nothing unless an openssl derivative is detected
+#if OPENSSL_VERSION_NUMBER >= 0x10100000 && !defined(LIBRESSL_VERSION_NUMBER)
+  // LibreSSL reports OPENSSL_VERSION_NUMBER as 0x20000000L but has never shipped
+  // OPENSSL_thread_stop(), so it is routed to ERR_remove_state() below, which it
+  // does implement. Do nothing unless an openssl derivative is detected
 #  if !defined(OPENSSL_IS_BORINGSSL) && !defined(OPENSSL_IS_AWSLC)
   // https://www.openssl.org/docs/man1.1.1/man3/OPENSSL_thread_stop.html
   OPENSSL_thread_stop();
@@ -180,6 +182,54 @@ static char uppercase(char c);
 
 // SSLContext implementation
 SSLContext::SSLContext(const SSLProtocol& protocol) {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+  // OpenSSL 4.0 removed the single-version SSLv3_method() / TLSv1_method() /
+  // TLSv1_1_method() / TLSv1_2_method() family. The documented replacement is
+  // TLS_method() pinned to one version with SSL_CTX_set_min_proto_version() and
+  // SSL_CTX_set_max_proto_version(), both available since 1.1.0. Selecting the
+  // replacement from 1.1.0 onwards rather than only on 4.0 keeps a single code
+  // path under test, instead of one that no CI configuration ever compiles.
+  const SSL_METHOD* method = TLS_method();
+  int version = 0;
+  switch (protocol) {
+  case SSLTLS:
+    // Version-flexible: the protocol floor is set through SSL_CTX_set_options()
+    // below, as it was before.
+    break;
+#if !defined(OPENSSL_NO_SSL3) && OPENSSL_VERSION_NUMBER < 0x40000000L
+  case SSLv3:
+    // SSLv3_method() is only gone in 4.0, which removes SSLv3 altogether, so
+    // below that it is kept rather than expressed as a TLS_method() window:
+    // SSL_CTX_set_min_proto_version() honours the security level and would
+    // refuse SSL3_VERSION at the default level, where SSLv3_method() does not.
+    // This is also the one arm no CI configuration compiles, so leaving it
+    // alone keeps it behaving exactly as before.
+    method = SSLv3_method();
+    break;
+#endif
+  case TLSv1_0:
+    version = TLS1_VERSION;
+    break;
+  case TLSv1_1:
+    version = TLS1_1_VERSION;
+    break;
+  case TLSv1_2:
+    version = TLS1_2_VERSION;
+    break;
+  default:
+    /// UNKNOWN PROTOCOL!
+    throw TSSLException("SSL_CTX_new: Unknown protocol");
+  }
+
+  ctx_ = SSL_CTX_new(method);
+  if (ctx_ != nullptr && version != 0
+      && (SSL_CTX_set_min_proto_version(ctx_, version) != 1
+          || SSL_CTX_set_max_proto_version(ctx_, version) != 1)) {
+    // The requested version is not available in this build of the library.
+    SSL_CTX_free(ctx_);
+    ctx_ = nullptr;
+  }
+#else
   if (protocol == SSLTLS) {
     ctx_ = SSL_CTX_new(SSLv23_method());
 #ifndef OPENSSL_NO_SSL3
@@ -196,6 +246,7 @@ SSLContext::SSLContext(const SSLProtocol& protocol) {
     /// UNKNOWN PROTOCOL!
     throw TSSLException("SSL_CTX_new: Unknown protocol");
   }
+#endif
 
   if (ctx_ == nullptr) {
     string errors;
@@ -405,7 +456,8 @@ void TSSLSocket::close() {
     SSL_free(ssl_);
     ssl_ = nullptr;
     handshakeCompleted_ = false;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
+#if OPENSSL_VERSION_NUMBER >= 0x10100000 && !defined(LIBRESSL_VERSION_NUMBER)
+    // LibreSSL has no OPENSSL_thread_stop(); see cleanupOpenSSL() above.
     // Do nothing unless an openssl derivative is detected
 #  if !defined(OPENSSL_IS_BORINGSSL) && !defined(OPENSSL_IS_AWSLC)
     // https://www.openssl.org/docs/man1.1.1/man3/OPENSSL_thread_stop.html
@@ -810,9 +862,23 @@ void TSSLSocket::authorize() {
   //
   // Skipped entirely when the certificate presented a dNSName: it has already
   // had its say, and a non-matching one is an answer, not an absence.
+  //
+  // OpenSSL 4.0 made X509_get_subject_name(), X509_NAME_get_entry() and
+  // X509_NAME_ENTRY_get_data() return const pointers. Every function these
+  // values are then passed to has taken const since 1.1.0, so the const types
+  // are used from there on as well. LibreSSL is excluded because it keeps the
+  // pre-1.1.0 signatures.
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+  const X509_NAME* name = hasDnsName ? nullptr : X509_get_subject_name(cert);
+#else
   X509_NAME* name = hasDnsName ? nullptr : X509_get_subject_name(cert);
+#endif
   if (name != nullptr) {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+    const X509_NAME_ENTRY* entry;
+#else
     X509_NAME_ENTRY* entry;
+#endif
     unsigned char* utf8;
     int last = -1;
     while (decision == AccessManager::SKIP) {
@@ -822,7 +888,11 @@ void TSSLSocket::authorize() {
       entry = X509_NAME_get_entry(name, last);
       if (entry == nullptr)
         continue;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+      const ASN1_STRING* common = X509_NAME_ENTRY_get_data(entry);
+#else
       ASN1_STRING* common = X509_NAME_ENTRY_get_data(entry);
+#endif
       int size = ASN1_STRING_to_UTF8(&utf8, common);
       if (host.empty()) {
         host = (server() ? getPeerHost() : getHost());

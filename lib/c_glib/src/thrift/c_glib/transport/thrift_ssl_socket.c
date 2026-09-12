@@ -285,7 +285,12 @@ thrift_ssl_socket_close (ThriftTransport *transport, GError **error)
       SSL_shutdown(ssl_socket->ssl);
       SSL_free(ssl_socket->ssl);
       ssl_socket->ssl = NULL;
+      /* ERR_remove_state() has been an empty stub since OpenSSL 1.1.0 and was
+         removed altogether in 4.0. LibreSSL reports OPENSSL_VERSION_NUMBER as
+         0x20000000L but still implements it, so it keeps the call. */
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
       ERR_remove_state(0);
+#endif
   }
   return thrift_socket_close(transport, error);
 }
@@ -724,7 +729,10 @@ void thrift_ssl_socket_finalize_openssl(void)
   ERR_free_strings();
   EVP_cleanup();
   CRYPTO_cleanup_all_ex_data();
+  /* See thrift_ssl_socket_close() for why this is version-gated. */
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
   ERR_remove_state(0);
+#endif
 }
 
 
@@ -845,6 +853,54 @@ SSL_CTX*
 thrift_ssl_socket_context_initialize(ThriftSSLSocketProtocol ssl_protocol, GError **error)
 {
   SSL_CTX* context = NULL;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+  /* OpenSSL 4.0 removed the single-version SSLv3_method() / TLSv1_method() /
+     TLSv1_1_method() / TLSv1_2_method() family. The documented replacement is
+     TLS_method() pinned to one version with SSL_CTX_set_min_proto_version()
+     and SSL_CTX_set_max_proto_version(), both available since 1.1.0. This
+     mirrors the C++ binding in lib/cpp/src/thrift/transport/TSSLSocket.cpp. */
+  const SSL_METHOD* method = TLS_method();
+  int version = 0;
+  switch(ssl_protocol){
+    case SSLTLS:
+      /* Version-flexible: the protocol floor is set through
+         SSL_CTX_set_options() below, as it was before. */
+      break;
+#if !defined(OPENSSL_NO_SSL3) && OPENSSL_VERSION_NUMBER < 0x40000000L
+    case SSLv3:
+      /* SSLv3_method() is only gone in 4.0, which removes SSLv3 altogether, so
+         below that it is kept rather than expressed as a TLS_method() window:
+         SSL_CTX_set_min_proto_version() honours the security level and would
+         refuse SSL3_VERSION at the default level, where SSLv3_method() does
+         not. See the C++ binding for the same reasoning. */
+      method = SSLv3_method();
+      break;
+#endif
+    case TLSv1_0:
+      version = TLS1_VERSION;
+      break;
+    case TLSv1_1:
+      version = TLS1_1_VERSION;
+      break;
+    case TLSv1_2:
+      version = TLS1_2_VERSION;
+      break;
+    default:
+      g_set_error (error, THRIFT_TRANSPORT_ERROR,
+		   THRIFT_SSL_SOCKET_ERROR_CIPHER_NOT_AVAILABLE,
+		   "The SSL protocol is unknown for %d", ssl_protocol);
+      return NULL;
+  }
+
+  context = SSL_CTX_new(method);
+  if (context != NULL && version != 0
+      && (SSL_CTX_set_min_proto_version(context, version) != 1
+          || SSL_CTX_set_max_proto_version(context, version) != 1)) {
+      /* The requested version is not available in this build of the library. */
+      SSL_CTX_free(context);
+      context = NULL;
+  }
+#else
   switch(ssl_protocol){
     case SSLTLS:
       context = SSL_CTX_new(SSLv23_method());
@@ -870,6 +926,7 @@ thrift_ssl_socket_context_initialize(ThriftSSLSocketProtocol ssl_protocol, GErro
       return NULL;
       break;
   }
+#endif
 
   if (context == NULL) {
       thrift_ssl_socket_get_error((const guchar*)"No cipher overlay", THRIFT_SSL_SOCKET_ERROR_CIPHER_NOT_AVAILABLE, error);

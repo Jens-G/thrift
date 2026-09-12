@@ -329,6 +329,54 @@ BOOST_AUTO_TEST_CASE(custom_ssl_context_factory_validation)
     }
 }
 
+BOOST_AUTO_TEST_CASE(explicit_protocol_version_window)
+{
+    // An explicitly requested protocol has to pin the context to exactly that
+    // version, the way the per-version TLSv1_x_method() functions it replaces
+    // did. Checking the window rather than just "a context came back" is what
+    // catches a remapping that silently leaves the floor to the library
+    // default, which would make an explicit request laxer than SSLTLS.
+    //
+    // SSL_CTX_get_min_proto_version() and SSL_CTX_get_max_proto_version() were
+    // added in OpenSSL 1.1.1a.
+#if OPENSSL_VERSION_NUMBER >= 0x1010101fL && !defined(LIBRESSL_VERSION_NUMBER)
+    struct Expectation
+    {
+        apache::thrift::transport::SSLProtocol protocol;
+        const char* name;
+        int version;
+    };
+
+    const Expectation expectations[] = {
+        { apache::thrift::transport::TLSv1_0, "TLSv1_0", TLS1_VERSION   },
+        { apache::thrift::transport::TLSv1_1, "TLSv1_1", TLS1_1_VERSION },
+        { apache::thrift::transport::TLSv1_2, "TLSv1_2", TLS1_2_VERSION },
+        { apache::thrift::transport::LATEST,  "LATEST",  TLS1_2_VERSION }
+    };
+
+    for (const auto& expected : expectations)
+    {
+        BOOST_TEST_MESSAGE(boost::format("TEST: protocol = %1%") % expected.name);
+        apache::thrift::transport::SSLContext context(expected.protocol);
+        BOOST_CHECK_EQUAL(expected.version, SSL_CTX_get_min_proto_version(context.get()));
+        BOOST_CHECK_EQUAL(expected.version, SSL_CTX_get_max_proto_version(context.get()));
+    }
+#endif
+
+#if defined(OPENSSL_NO_SSL3) || OPENSSL_VERSION_NUMBER >= 0x40000000L
+    // SSLv3 is not available in this build of the library. That has to be
+    // reported rather than quietly satisfied with some other version.
+    try
+    {
+        apache::thrift::transport::SSLContext context(apache::thrift::transport::SSLv3);
+        BOOST_FAIL("Expected unavailable SSLv3 to throw");
+    }
+    catch (const TSSLException&)
+    {
+    }
+#endif
+}
+
 BOOST_AUTO_TEST_CASE(ssl_security_matrix)
 {
     try
@@ -357,7 +405,7 @@ BOOST_AUTO_TEST_CASE(ssl_security_matrix)
                     continue;
                 }
 
-#ifdef OPENSSL_NO_SSL3
+#if defined(OPENSSL_NO_SSL3) || OPENSSL_VERSION_NUMBER >= 0x40000000L
                 if (si == 2 || ci == 2)
                 {
                     // Skip all SSLv3 cases - protocol not supported

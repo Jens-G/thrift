@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE TSSLSocketMatchNameTest
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
+#include <boost/version.hpp>
 #include <thrift/transport/TSSLSocket.h>
 #include <thrift/transport/TSSLServerSocket.h>
 #include <thrift/transport/TTransportException.h>
@@ -28,6 +29,9 @@
 #include <openssl/x509v3.h>
 
 #include <string>
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 using apache::thrift::transport::AccessManager;
 using apache::thrift::transport::DefaultClientAccessManager;
@@ -36,6 +40,34 @@ using apache::thrift::transport::TSSLSocketFactory;
 using apache::thrift::transport::TSSLServerSocket;
 using apache::thrift::transport::TTransport;
 using apache::thrift::transport::TTransportException;
+
+// Several of the cases below have the client reject the server's identity on
+// purpose, which tears the connection down mid-handshake. OpenSSL calls send()
+// without MSG_NOSIGPIPE, so the peer still writing to that socket takes a
+// SIGPIPE and the whole test binary dies with status 141. SecurityTest.cpp
+// ignores the signal for the same reason.
+struct GlobalFixture
+{
+    GlobalFixture()
+    {
+#ifdef __linux__
+        signal(SIGPIPE, SIG_IGN);
+#endif
+    }
+
+    virtual ~GlobalFixture()
+    {
+#ifdef __linux__
+        signal(SIGPIPE, SIG_DFL);
+#endif
+    }
+};
+
+#if (BOOST_VERSION >= 105900)
+BOOST_GLOBAL_FIXTURE(GlobalFixture);
+#else
+BOOST_GLOBAL_FIXTURE(GlobalFixture)
+#endif
 
 BOOST_AUTO_TEST_SUITE(TSSLSocketMatchNameTest)
 
@@ -122,11 +154,17 @@ Pem selfSigned(const std::string& commonName, const std::string& subjectAltName)
 #endif
   X509_set_pubkey(cert, key);
 
-  X509_NAME* subject = X509_get_subject_name(cert);
+  // Built up separately rather than through X509_get_subject_name(), which
+  // returns a const pointer as of OpenSSL 4.0. Both setters copy the name, so
+  // the local one is released again right away.
+  X509_NAME* subject = X509_NAME_new();
+  BOOST_REQUIRE(subject != nullptr);
   X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_ASC,
                              reinterpret_cast<const unsigned char*>(commonName.c_str()),
                              -1, -1, 0);
+  X509_set_subject_name(cert, subject);
   X509_set_issuer_name(cert, subject);
+  X509_NAME_free(subject);
 
   if (!subjectAltName.empty()) {
     X509V3_CTX extCtx;
